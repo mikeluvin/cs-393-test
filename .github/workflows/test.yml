@@ -1,0 +1,25 @@
+on:
+  - push
+ 
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    env:
+      MAJOR: 3
+      MINOR: 1
+      TEAM: team23
+      LOGLEVEL: info # Valid options are: error | info | debug
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: Install Racket
+        uses: Bogdanp/setup-racket@v1.7
+        with:
+          architecture: 'x64'
+          distribution: 'full'
+          variant: 'CS'
+          version: '8.4'
+      - name: Install oracle
+        run: raco pkg install -D --auto https://github.com/NorthwesternSoftwareConstructionS22/oracle.git
+      - name: Run tests
+        run: racket -O "$LOGLEVEL"@fest -W none -l software-construction-admin -- -M $MAJOR -m $MINOR -n "$TEAM"
