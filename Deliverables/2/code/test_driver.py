@@ -1,4 +1,4 @@
-from backend.backend import my_sort
+from backend import my_sort
 import json
 
 def main():
