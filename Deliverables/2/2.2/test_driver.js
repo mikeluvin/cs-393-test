@@ -13,7 +13,7 @@ function main() {
         let startBracket = 0;
         let endBracket = inputString.indexOf("}", startBracket);
 
-        while (inputArr.length < 10 && endBracket != -1) {
+        while (inputArr.length < 10 && endBracket !== -1) {
             currString = inputString.slice(startBracket, endBracket+1).trim();
             inputArr.push(JSON.parse(currString));
             startBracket = endBracket + 1;
@@ -21,12 +21,7 @@ function main() {
             currString = "";
         } 
 
-        /*
-        if (endBracket == -1) {
-            currString = inputString.slice(startBracket).trim();
-        } */
-
-        if (inputArr.length == 10) {
+        if (inputArr.length === 10) {
             process.stdout.write(my_sort(JSON.stringify(inputArr)));
             process.stdin.destroy();
         }

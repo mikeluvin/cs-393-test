@@ -12,6 +12,7 @@ def main():
     # see https://n8ta.com/python3/python/json/2021/04/09/how-to-parse-json-objects-from-stdin.html
     decoder = json.JSONDecoder()
     done = False
+    # set of valid integers in the special object
     valid_range = set(range(1,25))
 
     while True:

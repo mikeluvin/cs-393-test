@@ -1,38 +1,69 @@
 import process from 'process';
-import { my_sort } from './backend.js';
+import fs from "fs";
+import { my_sort } from '../2.2/backend.js';
 
-function main() {
-    // see https://stackoverflow.com/questions/26460324/how-to-work-with-process-stdin-on
-    // and https://nodejs.org/api/process.html#processstdin
-    process.stdin.resume();
-    let inputArr = [];
-    let inputSubArr = [];
-    let currString = "";
-    process.stdin.on("data", (inputBytes) => {
-        let inputString = inputBytes.toString();
-        inputString = currString.concat(inputString);
-        let startBracket = inputString.indexOf("{");
-        let endBracket = inputString.indexOf("}", startBracket);
+function frontend(inputString) {
+    let inputArr = [],
+        inputSubArr = [],
+        currString = "",
+    // create a set of valid values, 1 to 24
+        validRange = new Array(24);
+    for (let i = 0; i < validRange.length; i++) {
+        validRange[i] = i + 1;
+    }
+    validRange = new Set(validRange);
 
-        while (inputSubArr.length < 10 && endBracket != -1) {
+    let startBracket = inputString.indexOf("{"),
+        endBracket = inputString.indexOf("}", startBracket),
+        oldStartBracket = startBracket,
+        oldEndBracket = endBracket,
+        _json = "",
+        validJson = false;
+
+    while (startBracket !== -1 && endBracket !== -1) {
+        // keep trying to build a JSON object by finding the next closing bracket
+        while (!validJson) {
             currString = inputString.slice(startBracket, endBracket+1).trim();
-            inputSubArr.push(JSON.parse(currString));
-            startBracket = inputString.indexOf("{", endBracket);
-            endBracket = inputString.indexOf("}", startBracket);
-            currString = "";
-        } 
-
-        //
-        if (endBracket == -1) {
-            currString = inputString.slice(startBracket).trim();
+            try {
+                _json = JSON.parse(currString);
+                validJson = true;
+            } catch {
+                endBracket = inputString.indexOf("}", endBracket + 1);
+            } 
+        }
+        oldStartBracket = startBracket;
+        oldEndBracket = endBracket;
+        startBracket = inputString.indexOf("{", endBracket + 1);
+        endBracket = startBracket != -1? inputString.indexOf("}", startBracket + 1) : -1;
+        validJson = false;
+        // if the object is inside a list, ignore it
+        if (inputString.charAt(oldEndBracket + 1) === "," || inputString.charAt(oldEndBracket + 1) == "]") {
+            continue
         }
 
-        if (inputSubArr.length == 10) {
+        if (!(typeof(_json) === "object" && Object.keys(_json).length === 1
+            && typeof(_json["content"]) === "number" && validRange.has(_json["content"]))) 
+        {
+            continue;
+        }
+        inputSubArr.push(_json);
+        
+        if (inputSubArr.length === 10) {
             inputArr.push(inputSubArr);
             inputSubArr = [];
-            //process.stdin.destroy();
         }
-    })
+    }
+
+    let resArr = [];
+    for (const arr of inputArr) {
+        resArr.push(JSON.parse(my_sort(JSON.stringify(arr))));
+    }
+    return resArr;
+}
+
+function main() {
+    let inputString = fs.readFileSync(0, 'utf-8');
+    process.stdout.write(JSON.stringify(frontend(inputString)));
 }
 
 main();
