@@ -7,7 +7,7 @@
                 1,
                 1,
                 1,
-                1
+                6
             ],
             "position": 1,
             "score1": 8,
@@ -22,8 +22,7 @@
             ],
             "position": 2,
             "score1": 11,
-            "score2": 6,
-            "score3": 2
+            "score2": 6
         },
         {
             "criteria": [
@@ -43,7 +42,7 @@
     ],
     "construction-cards": [
         [
-            1,
+            16,
             "surveyor"
         ],
         [
