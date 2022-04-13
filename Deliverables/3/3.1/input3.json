@@ -12,7 +12,7 @@
       "blank",
       "blank"
     ],
-    "refusals": 0,
+    "refusals": 3,
     "streets": [
       {
         "homes": [
@@ -68,7 +68,7 @@
         "pools": [
           true,
           true,
-          true
+          false
         ]
       },
       {

@@ -1,3 +1,11 @@
+input3: 3 refusals used
+input4: 2 pools and 2 parks in row1 and 4 houses total have been built
+input5: all houses have been built
+input6: city plan used
+input7: house duplicated twice using "bis"
+input8: agents crossed off
+input9: all parks are crossed off
+input10: all pools are built
 input11: "bis" house does not have the same number as its adjacent house
 input12: houses are not in strictly increasing order
 input13: duplicate houses without using "bis"
