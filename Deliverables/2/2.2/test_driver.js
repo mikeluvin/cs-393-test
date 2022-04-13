@@ -1,4 +1,3 @@
-//import * as readline from 'readline';
 import process from 'process';
 import { my_sort } from './backend.js';
 
@@ -9,13 +8,12 @@ function main() {
     let inputArr = [];
     let currString = "";
     process.stdin.on("data", (inputBytes) => {
-        // read all the data, replace any newlines with an empty string
-        let inputString = inputBytes.toString().replaceAll("\n", "");
+        let inputString = inputBytes.toString();
         inputString = currString.concat(inputString);
         let startBracket = 0;
         let endBracket = inputString.indexOf("}", startBracket);
 
-        while (inputArr.length < 10 && endBracket != -1) {
+        while (inputArr.length < 10 && endBracket !== -1) {
             currString = inputString.slice(startBracket, endBracket+1).trim();
             inputArr.push(JSON.parse(currString));
             startBracket = endBracket + 1;
@@ -23,11 +21,7 @@ function main() {
             currString = "";
         } 
 
-        if (endBracket == -1) {
-            currString = inputString.slice(startBracket).trim();
-        }
-
-        if (inputArr.length == 10) {
+        if (inputArr.length === 10) {
             process.stdout.write(my_sort(JSON.stringify(inputArr)));
             process.stdin.destroy();
         }
