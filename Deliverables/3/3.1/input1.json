@@ -1,7 +1,7 @@
 {
     "agents": [
       0,
-      3,
+      0,
       0,
       0,
       0,
@@ -66,8 +66,8 @@
         ],
         "parks": 0,
         "pools": [
-          false,
-          false,
+          true,
+          true,
           false
         ]
       },
