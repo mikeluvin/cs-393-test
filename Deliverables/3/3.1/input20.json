@@ -12,7 +12,7 @@
       "blank",
       "blank"
     ],
-    "refusals": 4,
+    "refusals": 2,
     "streets": [
       {
         "homes": [
@@ -44,8 +44,8 @@
             false
           ],
           [
-            false,
-            7,
+            true,
+            [6, "bis"],
             false
           ],
           [
