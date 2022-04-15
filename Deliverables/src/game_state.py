@@ -1,43 +1,11 @@
 import json
+from state_helpers import *
 
 EFFECTS = set(["surveyor", "agent", "landscaper", "pool", "temp", "bis"])
 
 
-def check_nat(num: int):
-    '''
-    Returns True if the input is a natural number.
-    '''
-    return type(num) == int and num >= 0
-
-
-def check_valid_lst(lst: list, length: int, valid_func):
-    '''
-    Returns True if all elements in the list satisfy the constraints in 
-    valid_func and the list is the desired length.
-    '''
-    if type(lst) != list or (length is not None and len(lst) != length):
-        return False
-
-    return all(valid_func(x) for x in lst)
-
-
-def check_type_and_membership(var, typ, set_):
-    '''
-    Returns True if var is of type typ and is in set_.
-    '''
-    return type(var) == typ and var in set_
-
-
-def check_increasing(lst):
-    for i in range(1, len(lst)):
-        if lst[i] < lst[i - 1]:
-            return False
-
-    return True
-
-
 class CityPlan():
-    def __init__(self, cp_dict) -> None:
+    def __init__(self, cp_dict: dict) -> None:
         cp_keys = set(["criteria", "position", "score1", "score2"])
         if type(cp_dict) != dict or set(cp_dict.keys()) != cp_keys:
             raise ValueError(f"A city-plan must be a dictionary containing only these keys: {cp_keys}")
@@ -83,7 +51,7 @@ class CityPlan():
 
 
 class ConstructionCard():
-    def __init__ (self, cc_lst) -> None:
+    def __init__ (self, cc_lst: list) -> None:
         if type(cc_lst) != list or len(cc_lst) != 2:
             raise ValueError(f"The input for construction-card must be [ int, string ]")
 
@@ -115,7 +83,7 @@ class ConstructionCard():
 
 
 class GameState():
-    def __init__(self, gs_dict) -> None:
+    def __init__(self, gs_dict: dict) -> None:
         gs_keys = set(["city-plans", "city-plans-won", "construction-cards", "effects"])
         if type(gs_dict) != dict or set(gs_dict.keys()) != gs_keys:
             raise ValueError(f"A game-state must be a dictionary containing only these keys: {gs_keys}")
