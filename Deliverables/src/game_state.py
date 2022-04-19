@@ -1,4 +1,5 @@
 import json
+from exception import *
 from state_helpers import *
 
 EFFECTS = set(["surveyor", "agent", "landscaper", "pool", "temp", "bis"])
@@ -8,27 +9,27 @@ class CityPlan():
     def __init__(self, cp_dict: dict) -> None:
         cp_keys = set(["criteria", "position", "score1", "score2"])
         if type(cp_dict) != dict or set(cp_dict.keys()) != cp_keys:
-            raise ValueError(f"A city-plan must be a dictionary containing only these keys: {cp_keys}")
+            raise CityPlanException(f"A city-plan must be a dictionary containing only these keys: {cp_keys}")
         criteria, position, score1, score2 = cp_dict["criteria"], cp_dict["position"], cp_dict["score1"], cp_dict["score2"]
 
         # valid city plan positions are 1, 2, or 3
         valid_posns = set(range(1, 4))
         # criteria must be a list of naturals
         if not check_valid_lst(criteria, None, check_nat) or not check_increasing(criteria):
-            raise ValueError(f"Given {criteria}, but city plan 'criteria' must be a list of integers.")
+            raise CityPlanException(f"Given {criteria}, but city plan 'criteria' must be a list of integers.")
         self._criteria = criteria
        
         if not check_type_and_membership(position, int, valid_posns):
-            raise ValueError(f"Given {position}, but city plan 'position' must be either 1, 2, or 3.")
+            raise CityPlanException(f"Given {position}, but city plan 'position' must be either 1, 2, or 3.")
         self._position = position
 
         # scores must be naturals
         if not check_nat(score1):
-            raise ValueError(f"Given {score1}, but city plan 'score1' must be a natural.")
+            raise CityPlanException(f"Given {score1}, but city plan 'score1' must be a natural.")
         self._score1 = score1
 
         if not check_nat(score2):
-            raise ValueError(f"Given {score2}, but city plan 'score1' must be a natural.")
+            raise CityPlanException(f"Given {score2}, but city plan 'score2' must be a natural.")
         self._score2 = score2
      
     def to_dict(self) -> dict:
@@ -53,7 +54,7 @@ class CityPlan():
 class ConstructionCard():
     def __init__ (self, cc_lst: list) -> None:
         if type(cc_lst) != list or len(cc_lst) != 2:
-            raise ValueError(f"The input for construction-card must be [ int, string ]")
+            raise ConstructionCardException(f"The input for construction-card must be [ int, string ]")
 
         num, effect = cc_lst
         # valid range of card number is 1-15
@@ -61,11 +62,11 @@ class ConstructionCard():
 
         # validate class inputs based on game spec
         if not check_type_and_membership(num, int, valid_range):
-            raise ValueError(f"Given {num}, but card numbers must be an integer between 1 and 15.")
+            raise ConstructionCardException(f"Given {num}, but card numbers must be an integer between 1 and 15.")
         self._num = num
 
         if not check_type_and_membership(effect, str, EFFECTS):
-            raise ValueError(f"Given {effect}, but effect must be one of {EFFECTS}.")
+            raise ConstructionCardException(f"Given {effect}, but effect must be one of {EFFECTS}.")
         self._effect = effect
 
     def to_list(self) -> list:
@@ -86,29 +87,29 @@ class GameState():
     def __init__(self, gs_dict: dict) -> None:
         gs_keys = set(["city-plans", "city-plans-won", "construction-cards", "effects"])
         if type(gs_dict) != dict or set(gs_dict.keys()) != gs_keys:
-            raise ValueError(f"A game-state must be a dictionary containing only these keys: {gs_keys}")
+            raise GameStateException(f"A game-state must be a dictionary containing only these keys: {gs_keys}")
 
         city_plans, city_plans_won = gs_dict["city-plans"], gs_dict["city-plans-won"]
         construct_cards, effects = gs_dict["construction-cards"], gs_dict["effects"]
 
         if not check_valid_lst(city_plans, 3, lambda x: type(x) == dict):
-            raise ValueError(f"Given {city_plans}, but city_plans must be a list of 3 dictionaries.")
+            raise GameStateException(f"Given {city_plans}, but city_plans must be a list of 3 dictionaries.")
         
         cp_posns = set([cp.get("position", -1) for cp in city_plans])
         if cp_posns != set([1, 2, 3]):
-            raise ValueError(f"The list of city-plans must have three plans with unique positions 1, 2, and 3.")
+            raise GameStateException(f"The list of city-plans must have three plans with unique positions 1, 2, and 3.")
         self._city_plans = [CityPlan(cp) for cp in city_plans]
 
         if not check_valid_lst(city_plans_won, 3, lambda x: type(x) == bool):
-            raise ValueError(f"Given {city_plans_won}, but city_plans_won must be a list of length 3 containing booleans.")
+            raise GameStateException(f"Given {city_plans_won}, but city_plans_won must be a list of length 3 containing booleans.")
         self._city_plans_won = city_plans_won
 
         if not check_valid_lst(construct_cards, 3, lambda x: type(x) == list):
-            raise ValueError(f"Given {city_plans}, but city_plans must be a list of 3 lists.")
+            raise GameStateException(f"Given {city_plans}, but city_plans must be a list of 3 lists.")
         self._construct_cards = [ConstructionCard(cc) for cc in construct_cards]
 
         if not check_valid_lst(effects, 3, lambda x: check_type_and_membership(x, str, EFFECTS)):
-            raise ValueError(f"Given {effects}, but effects must be a list of length 3 containing one of {EFFECTS}.")
+            raise GameStateException(f"Given {effects}, but effects must be a list of length 3 containing one of {EFFECTS}.")
         self._effects = effects
 
     # the city_plans_won, construction_cards, and effects fields are all updated as the game progresses

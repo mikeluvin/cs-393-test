@@ -1,23 +1,24 @@
 import json
 from state_helpers import *
+from exception import *
 
 class Home():
     def __init__(self, home_lst: list) -> None:
         if type(home_lst) != list or len(home_lst) != 3:
-            raise ValueError(f"A home must be a list containing three elements.")
+            raise HomeException(f"A home must be a list containing three elements.")
         
         fence, house, used_ip = home_lst
         if type(fence) != bool:
-            raise ValueError(f"Given {fence}, but fence-or-not must be a boolean.")
+            raise HomeException(f"Given {fence}, but fence-or-not must be a boolean.")
         self._fence = fence
         
         valid_house, num, bis = self._validate_house_and_bis(house)
         if not valid_house:
-            raise ValueError(f"Given {house}, but house must be one of:\n1. natural, 0-17\n2. 'blank'\n3. [natural, 'bis']")
+            raise HomeException(f"Given {house}, but house must be one of:\n1. natural, 0-17\n2. 'blank'\n3. [natural, 'bis']")
         self._house, self._num, self._bis = house, num, bis
 
         if not self._validate_used_ip(used_ip):
-            raise ValueError(f"Given {used_ip}, but used-in-plan must be a boolean.")
+            raise HomeException(f"Given {used_ip}, but used-in-plan must be a boolean.")
         self._used_ip = used_ip
 
     def _validate_house_and_bis(self, house):
@@ -106,7 +107,7 @@ class Street():
         self._pool_locs = [[2, 6, 7], [0, 3, 7], [1, 6, 10]]
         st_keys = set(["homes", "parks", "pools"])
         if type(st_dict) != dict or set(st_dict.keys()) != st_keys:
-            raise ValueError(f"A street must be a dictionary containing only these keys: {st_keys}")
+            raise StreetException(f"A street must be a dictionary containing only these keys: {st_keys}")
 
         homes, parks, pools = st_dict["homes"], st_dict["parks"], st_dict["pools"]
         if not self._validate_homes(homes):
@@ -118,13 +119,13 @@ class Street():
         # bis cannot have a pool    DONE
         # bis can't be separated from its duplicate by a fence  DONE
         if not check_valid_lst(pools, 3, lambda x: type(x) == bool):
-            raise ValueError(f"Given {pools}, but pools must be a list of 3 boolean values")
+            raise StreetException(f"Given {pools}, but pools must be a list of 3 boolean values")
         self._pools = pools
 
         self._check_homes_rule_violations()
         
         if not self._validate_parks(parks):
-            raise ValueError(f"Given {parks}, but parks must be a natural no greater than {self._parks_maxes[st_idx]}.")
+            raise StreetException(f"Given {parks}, but parks must be a natural no greater than {self._parks_maxes[st_idx]}.")
         self._parks = parks
         # need to check that # of parks is <= # of non-bis houses on this street    DONE
         # need to check that a house has a number to be used in a housing estate plan   DONE (inside Home class)
@@ -186,7 +187,7 @@ class Street():
                     continue
                 if prev_home and curr_num == prev_home.get_num() and not home.has_fence():
                     continue
-                raise ValueError(f"Violation in street {self._idx + 1}: bis must have the same number as an adjacent house.")
+                raise StreetException(f"Violation in street {self._idx + 1}: bis must have the same number as an adjacent house.")
             else:
                 if curr_num == "blank":
                     continue
@@ -195,7 +196,7 @@ class Street():
                 if curr_num > prev_non_bis:
                     prev_non_bis = curr_num
                 else:
-                    raise ValueError(f"Violation in street {self._idx + 1}: non-bis house numbers must be strictly increasing.")
+                    raise StreetException(f"Violation in street {self._idx + 1}: non-bis house numbers must be strictly increasing.")
                 
     def _check_homes_pools(self) -> None:
         '''
@@ -208,7 +209,7 @@ class Street():
             if has_pool:
                 home = self._homes[curr_pool_locs[i]]
                 if home.get_num() == "blank" or home.is_bis():
-                    raise ValueError(f"Violation in street {self._idx + 1}: pool cannot be on a bis or blank house.")
+                    raise StreetException(f"Violation in street {self._idx + 1}: pool cannot be on a bis or blank house.")
 
 
     def _validate_parks(self, parks: int) -> bool:
@@ -243,29 +244,29 @@ class PlayerState():
         self._agent_maxes = [1, 2, 3, 4, 4, 4]
         ps_keys = set(["agents", "city-plan-score", "refusals", "streets", "temps"])
         if type(ps_dict) != dict or set(ps_dict.keys()) != ps_keys:
-            raise ValueError(f"A player-state must be a dictionary containing only these keys: {ps_keys}")
+            raise PlayerStateException(f"A player-state must be a dictionary containing only these keys: {ps_keys}")
 
         agents, cp_scores, refusals = ps_dict["agents"], ps_dict["city-plan-score"], ps_dict["refusals"]
         streets, temps = ps_dict["streets"], ps_dict["temps"]
 
         if not self._validate_agents(agents):
-            raise ValueError(f"Given {agents}, but agents must be a list of 6 naturals.")
+            raise PlayerStateException(f"Given {agents}, but agents must be a list of 6 naturals.")
         self._agents = agents
 
         if not check_valid_lst(cp_scores, 3, lambda x: (check_nat(x) or x == "blank")):
-            raise ValueError(f"Given {cp_scores}, but city_plan_scores must be a list containing naturals or 'blank'.")
+            raise PlayerStateException(f"Given {cp_scores}, but city_plan_scores must be a list containing naturals or 'blank'.")
         self._cp_scores = cp_scores
 
         if not check_nat(refusals) or refusals > 3:
-            raise ValueError(f"Given {refusals}, but refusals must be either 0, 1, 2, or 3.")
+            raise PlayerStateException(f"Given {refusals}, but refusals must be either 0, 1, 2, or 3.")
         self._refusals = refusals
 
         if not check_valid_lst(streets, 3, lambda x: type(x) == dict):
-            raise ValueError(f"Given {streets}, but streets must be a list 3 dictionaries.")
+            raise PlayerStateException(f"Given {streets}, but streets must be a list 3 dictionaries.")
         self._streets = [Street(st, i) for i, st in enumerate(streets)]
 
         if not check_nat(temps) or temps > 11:
-            raise ValueError(f"Given {temps}, but temps must be an integer between 0 and 11.")
+            raise PlayerStateException(f"Given {temps}, but temps must be an integer between 0 and 11.")
         self._temps = temps
 
     def _validate_agents(self, agents: list) -> bool:
