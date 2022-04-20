@@ -15,7 +15,7 @@ class CityPlanException(Exception):
         super().__init__(message)
 
 class ConstructionCardException(Exception):
-    def __init__(self, message="Invalid city plan."):
+    def __init__(self, message="Invalid construction card."):
         super().__init__(message)
 
 class GameStateException(Exception):
