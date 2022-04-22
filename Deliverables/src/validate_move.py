@@ -116,27 +116,6 @@ def validate_move(game_state: GameState, ps1: PlayerState, ps2: PlayerState):
                 change.refusals = True
             elif ch_field == "agents":
                 change.agents = True
-    
-
-    """""""""
-    # check if a temp was used
-    if not is_eq_or_mono_incr(ps1.temps, ps2.temps):
-        return False
-    elif ps1.temps + 1 == ps2.temps:
-        change.temps = True   
-
-    # refusals
-    if not is_eq_or_mono_incr(ps1.refusals, ps2.refusals):
-        return False
-    elif ps1.refusals + 1 == ps2.refusals:
-        change.refusals = True
-
-    # agents
-    if not is_eq_or_mono_incr(sum(ps1.agents), sum(ps2.agents)):
-        return False
-    elif sum(ps1.agents) + 1 == sum(ps2.agents):
-        change.agents = True
-    """""
 
     # find new city plan scores
     for i, cp1 in enumerate(ps1.city_plan_score):
@@ -169,7 +148,6 @@ def validate_move(game_state: GameState, ps1: PlayerState, ps2: PlayerState):
     if change.refusals:
         return False
         
-
     # otherwise, a card was played. validate card # used
     # it's possible that the house # matches more than one card. So, return
     # a list of possible cards
@@ -255,7 +233,10 @@ def validate_card_num(game_state: GameState, change: Change) -> tuple:
     for i, ccard in enumerate(game_state.ccards):
         possible_cards = set([ccard.num + x for x in range(-2, 3)])
         if house_num in possible_cards and game_state.effects[i] == "temp":
-            poss_cards.append((i, ccard.num))
+            # only possible that we used a temp if the field is marked True
+            # in the Change object
+            if change.temps:
+                poss_cards.append((i, ccard.num))
     
     # if we get here, then we built an invalid house
     return poss_cards if poss_cards else [(-1, -1)]
@@ -285,28 +266,6 @@ def validate_effect(game_state: GameState, change: Change, card_idx: int) -> boo
                 effect_used = True
             else:
                 return False
-
-    # extra checks for landscaper and pool
-    # park must be built in the same row as the new house
-    '''
-    if change.parks is not None:
-        if effect == "landscaper" and not effect_used:
-            effect_used = True
-            if change.houses[0] != change.parks:
-                return False
-        else:
-            return False
-
-    # pool must correspond to the new house
-    if change.pools:
-        if effect == "pool" and not effect_used:
-            effect_used = True
-            row, col = change.pools
-            if change.houses[0] != row or change.houses[1] != col:
-                return False
-        else:
-            return False
-    '''
 
     # if we get to this point where either:
     #   1. an effect was used correctly
