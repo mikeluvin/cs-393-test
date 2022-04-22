@@ -1,0 +1,70 @@
+[
+    {
+        "city-plans":
+        [
+            {
+                "criteria":[1,1,1,1,1,1],
+                "position":1,
+                "score1":8,
+                "score2":4
+            },
+            {
+                "criteria":[1,1,2,6],
+                "position":2,
+                "score1":11,
+                "score2":6
+            },
+            {
+                "criteria":[1,3,6],
+                "position":3,
+                "score1":12,
+                "score2":7
+            }
+        ],
+        "city-plans-won":[false,false,false],
+        "construction-cards":
+        [
+            [6,"surveyor"],
+            [2,"landscaper"],
+            [3,"pool"]
+        ],
+        "effects":
+        [
+            "surveyor",
+            "bis",
+            "temp"
+        ]
+    },
+    {
+        "agents":[0,0,0,0,0,0],
+        "city-plan-score":["blank","blank","blank"],
+        "refusals":0,
+        "streets":[
+                    {"homes":[0,false,[true,1,false],[true,2,false],[true,3,false],[true,4,false],[true,5,false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false]],
+                    "parks":0, "pools":[false,false,false]},
+    
+                    {"homes":["blank",false,[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false]],
+                    "parks":0,"pools":[false,false,false]},
+    
+                    {"homes":["blank",false,[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false]],
+                    "parks":0,"pools":[false,false,false]}
+                    ],
+        "temps":0
+    },
+    {
+        "agents":[0,0,0,0,0,0],
+        "city-plan-score":[8,"blank","blank"],
+        "refusals":0,
+        "streets":[
+                {"homes":[0,true,[true,1,true],[true,2,true],[true,3,true],[true,4,true],[true,5,true],[true,6,false],[false,"blank",false],[false,"blank",false],[false,"blank",false]],
+                "parks":0, "pools":[false,false,false]},
+
+                {"homes":["blank",false,[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false]],
+                "parks":0,"pools":[false,false,false]},
+
+                {"homes":["blank",false,[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false],[false,"blank",false]],
+                "parks":0,"pools":[false,false,false]}
+            ],
+        "temps":0
+    }
+]

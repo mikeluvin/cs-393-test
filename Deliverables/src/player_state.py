@@ -4,22 +4,14 @@ from exception import *
 
 class Home():
     def __init__(self, home_lst: list) -> None:
-        if type(home_lst) != list or len(home_lst) != 3:
+        if type(home_lst) != list or len(home_lst) != 4:
             raise HomeException(f"A home must be a list containing three elements.")
         
-        fence, house, used_ip = home_lst
-        if type(fence) != bool:
-            raise HomeException(f"Given {fence}, but fence-or-not must be a boolean.")
-        self._fence = fence
-        
-        valid_house, num, bis = self._validate_house_and_bis(house)
-        if not valid_house:
-            raise HomeException(f"Given {house}, but house must be one of:\n1. natural, 0-17\n2. 'blank'\n3. [natural, 'bis']")
-        self._house, self._num, self._bis = house, num, bis
-
-        if not self._validate_used_ip(used_ip):
-            raise HomeException(f"Given {used_ip}, but used-in-plan must be a boolean.")
-        self._used_ip = used_ip
+        fence_left, house, in_plan, fence_right = home_lst
+        self.fence_left = fence_left
+        self.fence_right = fence_right
+        self.house = house
+        self.in_plan = in_plan
 
     def _validate_house_and_bis(self, house):
         '''
@@ -44,20 +36,42 @@ class Home():
 
         return False, False, False    
 
-    def _validate_used_ip(self, used_ip: bool) -> bool:
+    def _validate_used_ip(self, in_plan: bool) -> bool:
         '''
         Returns True if used-in-plan satisfies the following:
         1. boolean
         2. can only be True if the home has a number
         '''
-        if type(used_ip) != bool:
+        if type(in_plan) != bool:
             return False
-        elif self._house == "blank" and used_ip is True:
+        elif self._house == "blank" and in_plan is True:
             return False
 
         return True
 
-    def get_house(self):
+    @property
+    def fence_left(self) -> bool:
+        return self._fence_left
+
+    @fence_left.setter
+    def fence_left(self, fence) -> None:
+        if type(fence) != bool:
+            raise HomeException(f"Given {fence}, but fence-or-not must be a boolean.")
+        self._fence_left = fence
+
+    @property
+    def fence_right(self) -> bool:
+        return self._fence_right
+
+    @fence_right.setter
+    def fence_right(self, fence) -> None:
+        if type(fence) != bool:
+            raise HomeException(f"Given {fence}, but fence-or-not must be a boolean.")
+        self._fence_right = fence
+
+    # NOTE: right now if we use the .num setter method, it's not synced up with house
+    @property
+    def house(self):
         '''
         Return the house, which is one of 
         1. natural, 0-17
@@ -66,35 +80,61 @@ class Home():
         '''
         return self._house
 
-    def get_num(self):
+    @house.setter
+    def house(self, house):
+        valid_house, num, bis = self._validate_house_and_bis(house)
+        if not valid_house:
+            raise HomeException(f"Given {house}, but house must be one of:\n1. natural, 0-17\n2. 'blank'\n3. [natural, 'bis']")
+        self._house, self._num, self._is_bis = house, num, bis
+
+    @property
+    def num(self):
         '''
-        Return the house number, either a natural 0-17 or "blank".
+        Return the house number; an integer 0 - 17, or "blank".
         '''
         return self._num
-    
-    def has_fence(self) -> bool:
-        '''
-        Return True if this home has a fence built
-        '''
-        return self._fence
-    
+
+    @num.setter
+    def num(self, num):
+        if (check_nat(num) and num <= 17) or num == "blank":
+            self._num = num
+        else:
+            raise HomeException(f"Given {num}, but house must either:\n1. natural, 0-17\n2. 'blank'.")
+
+    @property
     def is_bis(self) -> bool:
         '''
         Return True if this home is a bis.
         '''
-        return self._bis
+        return self._is_bis
+
+    @property
+    def in_plan(self) -> bool:
+        '''
+        Return True if this home is used in a city plan.
+        '''
+        return self._in_plan
+
+    @in_plan.setter
+    def in_plan(self, in_plan) -> None:
+        if not self._validate_used_ip(in_plan):
+            raise HomeException(f"Given {in_plan}, but used-in-plan must be a boolean.")
+        self._in_plan = in_plan
 
     def to_list(self) -> list:
         '''
         Returns the list representation of a home.
         '''
-        return [self._fence, self._house, self._used_ip]
+        return [self._fence_left, self._num if not self._is_bis else [self._num, "bis"], self._in_plan]
 
     def __repr__(self) -> str:
         '''
         Returns the JSON representation of a home.
         '''
         return json.dumps(self.to_list())
+
+    def __eq__(self, other: object) -> bool:
+        return self.to_list() == other.to_list()
             
 
 class Street():
@@ -110,26 +150,51 @@ class Street():
             raise StreetException(f"A street must be a dictionary containing only these keys: {st_keys}")
 
         homes, parks, pools = st_dict["homes"], st_dict["parks"], st_dict["pools"]
-        if not self._validate_homes(homes):
-            raise ValueError(f"homes for row {st_idx+1} must be a list with {10 + st_idx} homes.")
-        self._build_homes(homes)
+        self.pools = pools
+        self.homes = homes
         # validate homes: strictly increasing (except for bis)  DONE
         # bis must be the same number as an adjacent house  DONE
         # house #s must be between 0 and 17     DONE
         # bis cannot have a pool    DONE
         # bis can't be separated from its duplicate by a fence  DONE
+        self.parks = parks
+        # need to check that # of parks is <= # of non-bis houses on this street    DONE
+        # need to check that a house has a number to be used in a housing estate plan   DONE (inside Home class)
+        # need to check that # of pools <= # houses in row  DONE
+
+    @property 
+    def homes(self):
+        return self._homes
+
+    @homes.setter
+    def homes(self, homes: list) -> None:
+        if not self._validate_homes(homes):
+            raise ValueError(f"homes for row {self._idx+1} must be a list with {10 + self._idx} homes.")
+        self._build_homes(homes)
+        self._check_homes_rule_violations()
+
+    @property
+    def pools(self):
+        return self._pools
+
+    @pools.setter
+    def pools(self, pools: list) -> None:
         if not check_valid_lst(pools, 3, lambda x: type(x) == bool):
             raise StreetException(f"Given {pools}, but pools must be a list of 3 boolean values")
         self._pools = pools
 
-        self._check_homes_rule_violations()
-        
+    @property
+    def parks(self) -> int:
+        return self._parks
+
+    @parks.setter
+    def parks(self, parks: list) -> None:
         if not self._validate_parks(parks):
-            raise StreetException(f"Given {parks}, but parks must be a natural no greater than {self._parks_maxes[st_idx]}.")
+            raise StreetException(f"Given {parks}, but parks must be a natural no greater than {self._parks_maxes[self._idx]}.")
         self._parks = parks
-        # need to check that # of parks is <= # of non-bis houses on this street    DONE
-        # need to check that a house has a number to be used in a housing estate plan   DONE (inside Home class)
-        # need to check that # of pools <= # houses in row  DONE
+
+    def get_pool_locs(self):
+        return self._pool_locs
 
     def _build_homes(self, homes: list) -> None:
         '''
@@ -138,15 +203,23 @@ class Street():
         The "fence-or-not" flag is always False for it.
         '''
         home_lst = []
-        sub_lst = [False]
+        curr_home = [True]
         for i in range(len(homes)):
             if i == 0:
-                sub_lst.append(homes[i])
+                curr_home.append(homes[i])
+                continue
             elif i == 1:
-                sub_lst.append(homes[i])
-                home_lst.append(sub_lst)
+                curr_home.append(homes[i])
+                # add on the left fence of the next house
+                curr_home.append(homes[i+1][0])
+            elif i == len(homes) - 1:
+                curr_home = homes[i]
+                curr_home.append(True)
             else:
-                home_lst.append(homes[i])
+                curr_home = homes[i]
+                curr_home.append(homes[i+1][0])
+
+            home_lst.append(curr_home)
 
         self._homes = [Home(home) for home in home_lst]       
             
@@ -180,12 +253,12 @@ class Street():
         for i, home in enumerate(self._homes):
             next_home = self._homes[i+1] if i < len(self._homes) - 1 else None
             prev_home = self._homes[i-1] if i > 0 else None
-            curr_num = home.get_num()
+            curr_num = home.num
 
-            if home.is_bis():
-                if next_home and curr_num == next_home.get_num() and not next_home.has_fence():
+            if home.is_bis:
+                if next_home and curr_num == next_home.num and not next_home.fence_left:
                     continue
-                if prev_home and curr_num == prev_home.get_num() and not home.has_fence():
+                if prev_home and curr_num == prev_home.num and not home.fence_left:
                     continue
                 raise StreetException(f"Violation in street {self._idx + 1}: bis must have the same number as an adjacent house.")
             else:
@@ -208,7 +281,7 @@ class Street():
         for i, has_pool in enumerate(self._pools):
             if has_pool:
                 home = self._homes[curr_pool_locs[i]]
-                if home.get_num() == "blank" or home.is_bis():
+                if home.num == "blank" or home.is_bis:
                     raise StreetException(f"Violation in street {self._idx + 1}: pool cannot be on a bis or blank house.")
 
 
@@ -236,6 +309,9 @@ class Street():
     def __repr__(self) -> str:
         return json.dumps(self.to_dict())
 
+    def __eq__(self, other: object) -> bool:
+        return self.to_dict() == other.to_dict()
+
 
 
 class PlayerState():
@@ -249,25 +325,11 @@ class PlayerState():
         agents, cp_scores, refusals = ps_dict["agents"], ps_dict["city-plan-score"], ps_dict["refusals"]
         streets, temps = ps_dict["streets"], ps_dict["temps"]
 
-        if not self._validate_agents(agents):
-            raise PlayerStateException(f"Given {agents}, but agents must be a list of 6 naturals.")
-        self._agents = agents
-
-        if not check_valid_lst(cp_scores, 3, lambda x: (check_nat(x) or x == "blank")):
-            raise PlayerStateException(f"Given {cp_scores}, but city_plan_scores must be a list containing naturals or 'blank'.")
-        self._cp_scores = cp_scores
-
-        if not check_nat(refusals) or refusals > 3:
-            raise PlayerStateException(f"Given {refusals}, but refusals must be either 0, 1, 2, or 3.")
-        self._refusals = refusals
-
-        if not check_valid_lst(streets, 3, lambda x: type(x) == dict):
-            raise PlayerStateException(f"Given {streets}, but streets must be a list 3 dictionaries.")
-        self._streets = [Street(st, i) for i, st in enumerate(streets)]
-
-        if not check_nat(temps) or temps > 11:
-            raise PlayerStateException(f"Given {temps}, but temps must be an integer between 0 and 11.")
-        self._temps = temps
+        self.agents = agents
+        self.city_plan_score = cp_scores
+        self.refusals = refusals
+        self.streets = streets
+        self.temps = temps
 
     def _validate_agents(self, agents: list) -> bool:
         '''
@@ -276,7 +338,63 @@ class PlayerState():
         2. each element is within its respective maximum value.
         '''
         return check_valid_lst(agents, 6, check_nat) and all(a <= self._agent_maxes[i] for i, a in enumerate(agents))
+
+    @property
+    def streets(self) -> list:
+        '''
+        Returns the list of Street objects for this PlayerState.
+        '''
+        return self._streets
+
+    @streets.setter
+    def streets(self, streets) -> None:
+        if not check_valid_lst(streets, 3, lambda x: type(x) == dict):
+            raise PlayerStateException(f"Given {streets}, but streets must be a list 3 dictionaries.")
+        self._streets = [Street(st, i) for i, st in enumerate(streets)]
+
+    @property
+    def agents(self):
+        '''
+        Returns the list of agents for this PlayerState.
+        '''
+        return self._agents
+
+    @agents.setter
+    def agents(self, agents: list) -> None:
+        if not self._validate_agents(agents):
+            raise PlayerStateException(f"Given {agents}, but agents must be a list of 6 naturals.")
+        self._agents = agents
+
+    @property
+    def city_plan_score(self):
+        return self._cp_scores
+
+    @city_plan_score.setter
+    def city_plan_score(self, cp_scores: list):
+        if not check_valid_lst(cp_scores, 3, lambda x: (check_nat(x) or x == "blank")):
+            raise PlayerStateException(f"Given {cp_scores}, but city_plan_scores must be a list containing naturals or 'blank'.")
+        self._cp_scores = cp_scores
     
+    @property
+    def refusals(self) -> int:
+        return self._refusals
+
+    @refusals.setter
+    def refusals(self, refusals) -> None:
+        if not check_nat(refusals) or refusals > 3:
+            raise PlayerStateException(f"Given {refusals}, but refusals must be either 0, 1, 2, or 3.")
+        self._refusals = refusals
+
+    @property
+    def temps(self) -> int:
+        return self._temps
+
+    @temps.setter
+    def temps(self, temps) -> None:
+        if not check_nat(temps) or temps > 11:
+            raise PlayerStateException(f"Given {temps}, but temps must be an integer between 0 and 11.")
+        self._temps = temps
+        
     def to_dict(self) -> dict:
         '''
         Returns the Dictionary representation of a PlayerState.
@@ -296,4 +414,7 @@ class PlayerState():
         Returns the JSON representation of a PlayerState.
         '''
         return json.dumps(self.to_dict())
+
+    def __eq__(self, other: object) -> bool:
+        return self.to_dict() == other.to_dict()
 

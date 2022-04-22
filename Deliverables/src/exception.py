@@ -10,6 +10,10 @@ class PlayerStateException(Exception):
     def __init__(self, message="Invalid player state."):
         super().__init__(message)
 
+class EffectException(Exception):
+    def __init__(self, message="Invalid effect."):
+        super().__init__(message)
+
 class CityPlanException(Exception):
     def __init__(self, message="Invalid city plan."):
         super().__init__(message)
