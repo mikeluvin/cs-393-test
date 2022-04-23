@@ -22,7 +22,9 @@ class Change():
         self.pools = []
         # check that temps card was used
         self.temps = False
+        # check that a real estate agent was used
         self.agents = False
+        # check that a refusal was used
         self.refusals = False
         # holds: list of [city_plan_idx, score_claimed]
         self.city_plan_score = []
@@ -34,6 +36,9 @@ class Change():
         return self.fences or self.bis_houses or self.parks or self.pools or self.temps or self.agents
 
     def is_city_plan_updated(self) -> bool:
+        '''
+        Returns True if there was an update to a city plan.
+        '''
         return self.in_plan or self.city_plan_score
         
     def to_dict(self) -> dict:
@@ -273,7 +278,7 @@ def validate_effect(game_state: GameState, change: Change, card_idx: int) -> boo
     # then, return True
     return True
 
-def validate_refusal(ps1: PlayerState, game_state: GameState):
+def validate_refusal(ps1: PlayerState, game_state: GameState) -> bool:
     '''
     Return a boolean indicating whether playing a refusal is valid.
     '''
@@ -307,16 +312,12 @@ def validate_refusal(ps1: PlayerState, game_state: GameState):
                         return False
 
     return True
-                    
-def validate_used_in_plan(game_state: GameState, change: Change):
-    # 1. figure out what city plans are being claimed
-    # 2. figure out what estates are newly marked (houses marked used-in-plan enclosed by fences)
-    # 3. for each city plan, see if there is a newly marked estate of the right size
-    # if there's anything weird along the way, return False
-    
 
-    # first, find all new estates
-    # keys are estate sizes, values are # of estates with that size
+def find_new_estates(change: Change):
+    '''
+    Returns a dictionary with the new estates claimed during this turn,
+    or False if there was a rule violation.
+    '''
     estates = defaultdict(int)
     first_home = True
     in_curr_estate = []
@@ -338,6 +339,19 @@ def validate_used_in_plan(game_state: GameState, change: Change):
             estates[len(in_curr_estate)] += 1
             in_curr_estate = []
             first_home = True
+
+    return estates
+                    
+def validate_used_in_plan(game_state: GameState, change: Change) -> bool:
+    '''
+    Returns a boolean indicating whether the new estates being used in
+    a plan are valid.
+    '''
+    # first, find all new estates
+    # keys are estate sizes, values are # of estates with that size
+    estates = find_new_estates(change)
+    if estates is False:
+        return False
 
     # find city plans that were potentially claimed
     for i, cp_score in change.city_plan_score:

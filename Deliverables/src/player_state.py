@@ -44,7 +44,7 @@ class Home():
         '''
         if type(in_plan) != bool:
             return False
-        elif self._house == "blank" and in_plan is True:
+        elif self._num == "blank" and in_plan is True:
             return False
 
         return True
@@ -69,7 +69,6 @@ class Home():
             raise HomeException(f"Given {fence}, but fence-or-not must be a boolean.")
         self._fence_right = fence
 
-    # NOTE: right now if we use the .num setter method, it's not synced up with house
     @property
     def house(self):
         '''
@@ -78,14 +77,14 @@ class Home():
         2. "blank"
         3. [natural, "bis"]
         '''
-        return self._house
+        return self._num if not self._is_bis else [self._num, "bis"]
 
     @house.setter
     def house(self, house):
         valid_house, num, bis = self._validate_house_and_bis(house)
         if not valid_house:
             raise HomeException(f"Given {house}, but house must be one of:\n1. natural, 0-17\n2. 'blank'\n3. [natural, 'bis']")
-        self._house, self._num, self._is_bis = house, num, bis
+        self._num, self._is_bis = num, bis
 
     @property
     def num(self):
