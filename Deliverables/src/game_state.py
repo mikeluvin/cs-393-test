@@ -2,8 +2,27 @@ import json
 from exception import *
 from state_helpers import *
 
-EFFECTS = set(["surveyor", "agent", "landscaper", "pool", "temp", "bis"])
 
+class Effect():
+    def __init__(self, effect: str) -> None:
+        self._effects = set(["surveyor", "agent", "landscaper", "pool", "temp", "bis"])
+        self.effect = effect
+
+    @property
+    def effect(self) -> str:
+        return self._effect
+
+    @effect.setter
+    def effect(self, effect: str) -> None:
+        if not check_type_and_membership(effect, str, self._effects):
+            raise EffectException(f"Given {effect}, but effect must be one of {self._effects}.")
+        self._effect = effect
+
+    def __repr__(self) -> str:
+        return self._effect
+
+    def __eq__(self, other: object) -> bool:
+        return str(self) == str(other)
 
 class CityPlan():
     def __init__(self, cp_dict: dict) -> None:
@@ -13,24 +32,55 @@ class CityPlan():
         criteria, position, score1, score2 = cp_dict["criteria"], cp_dict["position"], cp_dict["score1"], cp_dict["score2"]
 
         # valid city plan positions are 1, 2, or 3
-        valid_posns = set(range(1, 4))
+        self._valid_posns = set(range(1, 4))
+        self.criteria = criteria
+        self.position = position
+        self.score1 = score1
+        self.score2 = score2
+
+    @property 
+    def criteria(self):
+        return self._criteria
+
+    @criteria.setter
+    def criteria(self, criteria: list) -> None:
         # criteria must be a list of naturals
         if not check_valid_lst(criteria, None, check_nat) or not check_increasing(criteria):
             raise CityPlanException(f"Given {criteria}, but city plan 'criteria' must be a list of integers.")
         self._criteria = criteria
-       
-        if not check_type_and_membership(position, int, valid_posns):
+    
+    @property
+    def position(self) -> int:
+        return self._position
+    
+    @position.setter
+    def position(self, position) -> None:
+        if not check_type_and_membership(position, int, self._valid_posns):
             raise CityPlanException(f"Given {position}, but city plan 'position' must be either 1, 2, or 3.")
         self._position = position
 
+    @property
+    def score1(self) -> int:
+        return self._score1
+
+    @score1.setter
+    def score1(self, score1) -> None:
         # scores must be naturals
         if not check_nat(score1):
             raise CityPlanException(f"Given {score1}, but city plan 'score1' must be a natural.")
         self._score1 = score1
 
+    @property
+    def score2(self) -> int:
+        return self._score2
+
+    @score2.setter
+    def score2(self, score2) -> None:
+        # scores must be naturals
         if not check_nat(score2):
             raise CityPlanException(f"Given {score2}, but city plan 'score2' must be a natural.")
         self._score2 = score2
+
      
     def to_dict(self) -> dict:
         '''
@@ -49,6 +99,9 @@ class CityPlan():
         Returns the JSON representation of a CityPlan.
         '''
         return json.dumps(self.to_dict())
+    
+    def __eq__(self, other: object) -> bool:
+        return self.to_dict() == other.to_dict()
 
 
 class ConstructionCard():
@@ -58,22 +111,34 @@ class ConstructionCard():
 
         num, effect = cc_lst
         # valid range of card number is 1-15
-        valid_range = set(range(1, 16))
+        self._valid_range = set(range(1, 16))
+        self.num = num
+        self.effect = effect
 
+    @property
+    def num(self) -> int:
+        return self._num
+
+    @num.setter
+    def num(self, num) -> None:
         # validate class inputs based on game spec
-        if not check_type_and_membership(num, int, valid_range):
+        if not check_type_and_membership(num, int, self._valid_range):
             raise ConstructionCardException(f"Given {num}, but card numbers must be an integer between 1 and 15.")
         self._num = num
 
-        if not check_type_and_membership(effect, str, EFFECTS):
-            raise ConstructionCardException(f"Given {effect}, but effect must be one of {EFFECTS}.")
-        self._effect = effect
+    @property
+    def effect(self) -> Effect:
+        return self._effect
+
+    @effect.setter
+    def effect(self, effect) -> None:
+        self._effect = Effect(effect)
 
     def to_list(self) -> list:
         '''
         Returns the list representation of ConstructionCard, as outlined in the Assignment 3 spec.
         '''
-        return [self._num, self._effect]
+        return [self._num, str(self._effect)]
 
     def __repr__(self) -> str:
         '''
@@ -81,6 +146,8 @@ class ConstructionCard():
         '''
         return json.dumps(self.to_list())
 
+    def __eq__(self, other: object) -> bool:
+        return self.to_list() == other.to_list()
 
 
 class GameState():
@@ -92,43 +159,60 @@ class GameState():
         city_plans, city_plans_won = gs_dict["city-plans"], gs_dict["city-plans-won"]
         construct_cards, effects = gs_dict["construction-cards"], gs_dict["effects"]
 
-        if not check_valid_lst(city_plans, 3, lambda x: type(x) == dict):
-            raise GameStateException(f"Given {city_plans}, but city_plans must be a list of 3 dictionaries.")
+        self.city_plans = city_plans
+        self.city_plans_won = city_plans_won
+        self.ccards = construct_cards
+        self.effects = effects
         
-        cp_posns = set([cp.get("position", -1) for cp in city_plans])
-        if cp_posns != set([1, 2, 3]):
-            raise GameStateException(f"The list of city-plans must have three plans with unique positions 1, 2, and 3.")
-        self._city_plans = [CityPlan(cp) for cp in city_plans]
-
-        if not check_valid_lst(city_plans_won, 3, lambda x: type(x) == bool):
-            raise GameStateException(f"Given {city_plans_won}, but city_plans_won must be a list of length 3 containing booleans.")
-        self._city_plans_won = city_plans_won
-
-        if not check_valid_lst(construct_cards, 3, lambda x: type(x) == list):
-            raise GameStateException(f"Given {city_plans}, but city_plans must be a list of 3 lists.")
-        self._construct_cards = [ConstructionCard(cc) for cc in construct_cards]
-
-        if not check_valid_lst(effects, 3, lambda x: check_type_and_membership(x, str, EFFECTS)):
-            raise GameStateException(f"Given {effects}, but effects must be a list of length 3 containing one of {EFFECTS}.")
-        self._effects = effects
-
     # the city_plans_won, construction_cards, and effects fields are all updated as the game progresses
     # while not necessary for this assignment, in the future we may use the 'property' decorator
     # (see https://docs.python.org/3/library/functions.html#property)
     # to make for an easier getter/setter API and to enforce the field constraints.
-    '''
+    
     @property
     def city_plans(self):
         """The 'city_plans' field, a list of length 3 containing CityPlan objects."""
         return self._city_plans
 
-    @num.setter
-    def city_plans(self, new_city_plans):
-        if not check_valid_lst(new_city_plans, 3, lambda x: isinstance(x) == CityPlan):
-            raise ValueError(f"Given {new_city_plans}, but city_plans must be a list of length 3 containing CityPlan objects.")
-        
-        self._city_plans = new_city_plans
-    '''
+    @city_plans.setter
+    def city_plans(self, city_plans):
+        if not check_valid_lst(city_plans, 3, lambda x: type(x) == dict):
+            raise GameStateException(f"Given {city_plans}, but city_plans must be a list of 3 dictionaries.")
+
+        cp_posns = set([cp.get("position", -1) for cp in city_plans])
+        if cp_posns != set([1, 2, 3]):
+            raise GameStateException(f"The list of city-plans must have three plans with unique positions 1, 2, and 3.")
+        self._city_plans = [CityPlan(cp) for cp in city_plans]
+    
+    @property
+    def city_plans_won(self):
+        return self._city_plans_won
+
+    @city_plans_won.setter
+    def city_plans_won(self, city_plans_won: list) -> None:
+        if not check_valid_lst(city_plans_won, 3, lambda x: type(x) == bool):
+            raise GameStateException(f"Given {city_plans_won}, but city_plans_won must be a list of length 3 containing booleans.")
+        self._city_plans_won = city_plans_won
+
+    @property 
+    def ccards(self):
+        return self._ccards
+
+    @ccards.setter
+    def ccards(self, ccards) -> None:
+        if not check_valid_lst(ccards, 3, lambda x: type(x) == list):
+            raise GameStateException(f"Given {ccards}, but construction cards must be a list of 3 lists.")
+        self._ccards = [ConstructionCard(cc) for cc in ccards]
+
+    @property
+    def effects(self):
+        return self._effects
+
+    @effects.setter
+    def effects(self, effects: list) -> None:
+        if not check_valid_lst(effects, 3, lambda x: type(x) == str):
+            raise GameStateException(f"Given {effects}, but effects must be a list of string of length 3.")
+        self._effects = [Effect(e) for e in effects]
 
     def to_dict(self) -> dict:
         '''
@@ -137,8 +221,8 @@ class GameState():
         dict_repr = {
             "city-plans": [cp.to_dict() for cp in self._city_plans],
             "city-plans-won": self._city_plans_won,
-            "construction-cards": [cc.to_list() for cc in self._construct_cards],
-            "effects": self._effects
+            "construction-cards": [cc.to_list() for cc in self._ccards],
+            "effects": [str(effect) for effect in self._effects]
         }
         return dict_repr
 
@@ -147,3 +231,6 @@ class GameState():
         Returns the JSON representation of a GameState.
         '''
         return json.dumps(self.to_dict())
+
+    def __eq__(self, other: object) -> bool:
+        return self.to_dict() == other.to_dict()
