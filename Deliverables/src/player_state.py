@@ -84,7 +84,7 @@ class Home():
         valid_house, num, bis = self._validate_house_and_bis(house)
         if not valid_house:
             raise HomeException(f"Given {house}, but house must be one of:\n1. natural, 0-17\n2. 'blank'\n3. [natural, 'bis']")
-        self._num, self._is_bis = num, bis
+        self.num, self.is_bis = num, bis
 
     @property
     def num(self):
@@ -106,6 +106,12 @@ class Home():
         Return True if this home is a bis.
         '''
         return self._is_bis
+
+    @is_bis.setter
+    def is_bis(self, is_bis: bool) -> None:
+        if type(is_bis) != bool:
+            raise HomeException(f"Given {is_bis}, but bis must be a boolean.")
+        self._is_bis = is_bis
 
     @property
     def in_plan(self) -> bool:
@@ -168,7 +174,7 @@ class Street():
     @homes.setter
     def homes(self, homes: list) -> None:
         if not self._validate_homes(homes):
-            raise ValueError(f"homes for row {self._idx+1} must be a list with {10 + self._idx} homes.")
+            raise StreetException(f"homes for row {self._idx+1} must be a list with {10 + self._idx} homes.")
         self._build_homes(homes)
         self._check_homes_rule_violations()
 
@@ -212,10 +218,11 @@ class Street():
                 # add on the left fence of the next house
                 curr_home.append(homes[i+1][0])
             elif i == len(homes) - 1:
-                curr_home = homes[i]
+                # making a copy so we don't modify the input json (for testing purposes)
+                curr_home = homes[i].copy()
                 curr_home.append(True)
             else:
-                curr_home = homes[i]
+                curr_home = homes[i].copy()
                 curr_home.append(homes[i+1][0])
 
             home_lst.append(curr_home)
@@ -245,22 +252,38 @@ class Street():
         - homes are strictly increasing (except for bis houses)
         - bis houses are the same number as an adjacent house
         - bis houses are not separated by fences 
-        - house from which bis originates is not also a bis
+        - bis house(s) have a non-bis origin house
         '''
         prev_non_bis = -1
         self._non_bis_ct = 0
+        found_bis_origin = True
         for i, home in enumerate(self._homes):
             next_home = self._homes[i+1] if i < len(self._homes) - 1 else None
             prev_home = self._homes[i-1] if i > 0 else None
             curr_num = home.num
 
             if home.is_bis:
-                if next_home and curr_num == next_home.num and not next_home.fence_left:
-                    continue
+                valid_bis = False
                 if prev_home and curr_num == prev_home.num and not home.fence_left:
-                    continue
-                raise StreetException(f"Violation in street {self._idx + 1}: bis must have the same number as an adjacent house.")
+                    if not prev_home.is_bis:
+                        found_bis_origin = True
+                    valid_bis = True
+                # if the previous home doesn't exist, or its number is different (or blank),
+                # then we know this is the start of the "bis block"; we haven't yet
+                # found the non-bis house from which the "bis block" originated
+                elif not prev_home or curr_num != prev_home.num:
+                    found_bis_origin = False
+
+                if next_home and curr_num == next_home.num and not home.fence_right:
+                    if not next_home.is_bis:
+                        found_bis_origin = True
+                    valid_bis = True
+
+                if not valid_bis:
+                    raise StreetException(f"Violation in street {self._idx + 1}: bis must have the same number as an adjacent house.")
             else:
+                if not found_bis_origin:
+                    raise StreetException(f"Violation in street {self._idx + 1}: bis played next to a house with a different number (or blank).")
                 if curr_num == "blank":
                     continue
                 
@@ -269,6 +292,10 @@ class Street():
                     prev_non_bis = curr_num
                 else:
                     raise StreetException(f"Violation in street {self._idx + 1}: non-bis house numbers must be strictly increasing.")
+
+        # if we make it outside the loop but still haven't found the bis origin, it's invalid
+        if not found_bis_origin:
+            raise StreetException(f"Violation in street {self._idx + 1}: bis played next to a house with a different number (or blank).")
                 
     def _check_homes_pools(self) -> None:
         '''

@@ -130,12 +130,6 @@ def validate_move(game_state: GameState, ps1: PlayerState, ps2: PlayerState):
                 return False
             change.city_plan_score.append([i, cp2])
 
-    # check if a refusals was used
-    if not is_eq_or_mono_incr(ps1.refusals, ps2.refusals):
-        return False
-    elif ps1.refusals + 1 == ps2.refusals:
-        change.refusals = True
-
     #
     # now, we have all the changes from ps1 to ps2
     #

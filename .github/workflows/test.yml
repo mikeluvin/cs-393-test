@@ -5,8 +5,8 @@ jobs:
   test:
     runs-on: ubuntu-20.04
     env:
-      MAJOR: 5
-      MINOR: 2
+      MAJOR: 3
+      MINOR: 1
       TEAM: team23
       LOGLEVEL: info # Valid options are: error | info | debug
     steps:
