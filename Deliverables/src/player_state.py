@@ -254,47 +254,53 @@ class Street():
         - bis houses are not separated by fences 
         - bis house(s) have a non-bis origin house
         '''
+        # keep track of the previous non-bis house to verify the homes are
+        # strictly increasing
         prev_non_bis = -1
+        # this member variable is used when we check the parks in this street 
+        # (which is NOT in this function)
         self._non_bis_ct = 0
-        found_bis_origin = True
+        # bis_anchor: the "anchor" non-bis house, which is located to the left
+        # of the bis house(s). 
+        # bis_anchor is None if there's no anchor, the house number otherwise
+        #
+        # bis_obligation: the bis house number that doesn't yet have an anchor.
+        # Therefore, the first non-bis house to the right of the bis house(s)
+        # must fill this obligation (by being the same number). 
+        # bis_obligation is None if there's no outstanding obligation, the
+        # house number otherwise.
+        bis_anchor, bis_obligation = None, None
         for i, home in enumerate(self._homes):
             next_home = self._homes[i+1] if i < len(self._homes) - 1 else None
             prev_home = self._homes[i-1] if i > 0 else None
             curr_num = home.num
 
             if home.is_bis:
-                valid_bis = False
+                if bis_anchor != curr_num:
+                    bis_obligation = curr_num
+
                 if prev_home and curr_num == prev_home.num and not home.fence_left:
-                    if not prev_home.is_bis:
-                        found_bis_origin = True
-                    valid_bis = True
-                # if the previous home doesn't exist, or its number is different (or blank),
-                # then we know this is the start of the "bis block"; we haven't yet
-                # found the non-bis house from which the "bis block" originated
-                elif not prev_home or curr_num != prev_home.num:
-                    found_bis_origin = False
-
+                    continue
                 if next_home and curr_num == next_home.num and not home.fence_right:
-                    if not next_home.is_bis:
-                        found_bis_origin = True
-                    valid_bis = True
+                    continue
 
-                if not valid_bis:
-                    raise StreetException(f"Violation in street {self._idx + 1}: bis must have the same number as an adjacent house.")
+                raise StreetException(f"Violation in street {self._idx + 1}: bis must have the same number as an adjacent house.")
             else:
-                if not found_bis_origin:
+                if bis_obligation is not None and curr_num != bis_obligation:
                     raise StreetException(f"Violation in street {self._idx + 1}: bis played next to a house with a different number (or blank).")
                 if curr_num == "blank":
+                    bis_anchor, bis_obligation = None, None
                     continue
-                
-                self._non_bis_ct += 1
-                if curr_num > prev_non_bis:
-                    prev_non_bis = curr_num
-                else:
-                    raise StreetException(f"Violation in street {self._idx + 1}: non-bis house numbers must be strictly increasing.")
 
-        # if we make it outside the loop but still haven't found the bis origin, it's invalid
-        if not found_bis_origin:
+                if curr_num <= prev_non_bis:
+                    raise StreetException(f"Violation in street {self._idx + 1}: non-bis house numbers must be strictly increasing.")
+                
+                prev_non_bis, bis_anchor = curr_num, curr_num
+                bis_obligation = None
+                self._non_bis_ct += 1
+                    
+        # if we make it outside the loop but still fulfilled the bis_obligation, it's invalid
+        if bis_obligation is not None:
             raise StreetException(f"Violation in street {self._idx + 1}: bis played next to a house with a different number (or blank).")
                 
     def _check_homes_pools(self) -> None:
