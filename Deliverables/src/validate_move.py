@@ -68,7 +68,51 @@ class MoveValidator():
         Returns a boolean indicating whether the move from player_state_1 to
         player_state_2 is valid.
         '''
+        if not self._find_street_related_changes():
+            return False
+        if not self._find_rest_of_changes():
+            return False
 
+        #
+        # now, we have all the changes from ps1 to ps2
+        #
+        # if a house wasn't built, then a refusal must've been used
+        if not self._houses:
+            if not self._refusals or self.is_effect_used() or self.is_city_plan_updated():
+                return False
+            # otherwise, validate that the refusal was used correctly
+            return self._validate_refusal()    
+        
+        # if change.houses is True, then we can't have used a refusal
+        if self._refusals:
+            return False
+            
+        # otherwise, a card was played. validate card # used
+        # it's possible that the house # matches more than one card. So, return
+        # a list of possible cards
+        poss_cards = self._validate_card_num()
+        if poss_cards[0][1] == -1:
+            return False
+        
+        # validate effect used
+        poss_effects = [self._game_st.effects[i].effect for i, _ in poss_cards]
+        effect = self._validate_effect()
+        if effect is not None and effect not in poss_effects:
+            return False
+        
+        # validate city plan changes
+        if not self._validate_used_in_plan():
+            return False
+
+        return True
+
+
+    def _find_street_related_changes(self):
+        '''
+        Returns a boolean indicating whether the changes in the streets were valid.
+        These fields are: new home(s), parks, and pools.
+        If True, populates the changes in the their respective member variables.
+        '''
         # compare ps1 and ps2 to find the move
         # first, let's loop through the streets to find what # card was played
         # then loop through the construction cards to match with the card played 
@@ -81,7 +125,7 @@ class MoveValidator():
             for j, h1 in enumerate(s1.homes):
                 h2 = s2.homes[j]
                 prev_h1 = s1.homes[j-1] if j > 0 else None
-                if not self.find_house_fence_in_plan(i, j, h1, h2, prev_h1):
+                if not self._find_house_fence_in_plan(i, j, h1, h2, prev_h1):
                     return False
 
             # determine if a park was built
@@ -107,6 +151,14 @@ class MoveValidator():
                         return False
                     self._pools = [i, s2.get_pool_locs()[i][j]]
 
+        return True
+
+    def _find_rest_of_changes(self):
+        '''
+        Return a boolean indicating whether the changes in temps, refusals,
+        agents, and city plan scores are valid.
+        If True, populates the changes in the their respective member variables.
+        '''
         to_check = [
             (self._ps1.temps, self._ps2.temps, "temps"),
             (self._ps1.refusals, self._ps2.refusals, "refusals"),
@@ -132,52 +184,12 @@ class MoveValidator():
                     return False
                 self._city_plan_score.append([i, cp2])
 
-        #
-        # now, we have all the changes from ps1 to ps2
-        #
-        # if a house wasn't built, then a refusal must've been used
-        if not self._houses:
-            # if a refusal wasn't used, an effect was used or city plan was updated,
-            # then this move is invalid
-            if not self._refusals or self.is_effect_used() or self.is_city_plan_updated():
-                return False
-            # otherwise, validate that the refusal was used correctly
-            # try to place a house with each of the construction card values in each empty house
-            return self.validate_refusal()    
-        
-        # if change.houses is True, then we can't have used a refusal
-        if self._refusals:
-            return False
-            
-        # otherwise, a card was played. validate card # used
-        # it's possible that the house # matches more than one card. So, return
-        # a list of possible cards
-        poss_cards = self.validate_card_num()
-        # if the house built doesn't correspond to any of the CCs, then move is invalid
-        if poss_cards[0][1] == -1:
-            return False
-        
-        # validate effect used
-        for card_idx, card_num in poss_cards:
-            effect_correct = self.validate_effect(card_idx)
-            # if the effect used corresponds to this move, we're done
-            if effect_correct:
-                break
-
-        # if the effect doesn't correspond to one of the possible cards, the move is invalid
-        if not effect_correct:
-            return False
-        
-        # validate city plan changes
-        if not self.validate_used_in_plan():
-            return False
-
         return True
 
-    def find_house_fence_in_plan(self, i:int, j:int, h1: Home, h2: Home, prev_h1: Home):
+    def _find_house_fence_in_plan(self, i:int, j:int, h1: Home, h2: Home, prev_h1: Home):
         '''
         Determines if h2 is different from h1, and if so, what the changes were.
-        Updates the Change object with the corresponding change.\n
+        Updates the member variables with the corresponding change.\n
         Returns False if there was an illegal move.
         '''
         if h1.num != h2.num:
@@ -219,7 +231,7 @@ class MoveValidator():
 
         return True
 
-    def validate_card_num(self) -> tuple:
+    def _validate_card_num(self) -> tuple:
         '''
         Return the possible cards used, a list of [card_idx, card_num] values. 
         Returns [[-1, -1]] if the house placed doesn't correspond to any card.
@@ -230,25 +242,22 @@ class MoveValidator():
             if ccard.num == house_num:
                 poss_cards.append((i, ccard.num))
 
-        # if we get here, then maybe we used a temp
-        for i, ccard in enumerate(self._game_st.ccards):
-            possible_cards = set([ccard.num + x for x in range(-2, 3)])
-            if house_num in possible_cards and self._game_st.effects[i] == "temp":
-                # only possible that we used a temp if the field is marked True
-                # in the Change object
-                if self._temps:
+        # if a temp was (supposedly) used, check to see if there's a corresponding
+        # card 
+        if self._temps:
+            for i, ccard in enumerate(self._game_st.ccards):
+                possible_cards = set([ccard.num + x for x in range(-2, 3)])
+                if house_num in possible_cards and self._game_st.effects[i] == "temp":
                     poss_cards.append((i, ccard.num))
         
-        # if we get here, then we built an invalid house
         return poss_cards if poss_cards else [(-1, -1)]
 
 
-    def validate_effect(self, card_idx: int) -> bool:
+    def _validate_effect(self) -> bool:
         '''
         Return True if the effect used (if any) corresponds to the card used.
         '''
-        effect = self._game_st.effects[card_idx].effect
-        effect_used = False
+        effect_used = None
         effects_lst = [
             (self._fences, "surveyor"), 
             (self._bis_houses, "bis"), 
@@ -259,18 +268,16 @@ class MoveValidator():
 
         for ch_field, curr_effect in effects_lst:
             if ch_field:
-                if effect == curr_effect and not effect_used:
-                    effect_used = True
-                else:
+                if effect_used is not None:
                     return False
+                effect_used = curr_effect
 
         # if we get to this point where either:
         #   1. an effect was used correctly
         #   2. no effect was used
-        # then, return True
-        return True
+        return effect_used 
 
-    def validate_refusal(self) -> bool:
+    def _validate_refusal(self) -> bool:
         '''
         Return a boolean indicating whether playing a refusal is valid.
         '''
@@ -280,35 +287,31 @@ class MoveValidator():
                 if street.homes[j].num == "blank":
                     # try to play each of the construction cards
                     for ccard in self._game_st.ccards:
-                        street.homes[j].num = ccard.num
                         try:
-                            # homes setter method needs the list representation of homes
-                            # try setting homes with the new number
-                            st_dict = street.to_dict()
-                            street.homes = st_dict["homes"]
+                            # try setting home with the new number
+                            self._place_new_home(street, j, ccard.num)
                         except StreetException:
                             # change home number back to "blank"
-                            #
-                            # *** something weird happened with the references, had to do this
-                            # instead of h.num ***
-                            #
-                            street.homes[j].num = "blank"
-                            st_dict = street.to_dict()
-                            street.homes = st_dict["homes"]
-                            continue
+                            self._place_new_home(street, j, "blank")
                         else:
                             # if we can successfully place a home, then the refusal is invalid
-                            street.homes[j].num = "blank"
-                            st_dict = street.to_dict()
-                            street.homes = st_dict["homes"]
+                            self._place_new_home(street, j, "blank")
                             return False
 
         return True
 
-    def find_new_estates(self):
+    def _place_new_home(self, street: Street, home_idx: int, new_num):
+        # *** something weird happened with the references, had to do this
+        # instead of h.num ***
+        # homes setter method needs the list representation of homes
+        street.homes[home_idx].num = new_num
+        st_dict = street.to_dict()
+        street.homes = st_dict["homes"]
+
+    def _find_new_estates(self):
         '''
         Returns a dictionary with the new estates claimed during this turn,
-        or False if there was a rule violation.
+        or False if there was a rule violation. Keys are estate sizes, values are # of estates with that size
         '''
         estates = defaultdict(int)
         first_home = True
@@ -334,14 +337,14 @@ class MoveValidator():
 
         return estates
                         
-    def validate_used_in_plan(self) -> bool:
+    def _validate_used_in_plan(self) -> bool:
         '''
         Returns a boolean indicating whether the new estates being used in
         a plan are valid.
         '''
         # first, find all new estates
         # keys are estate sizes, values are # of estates with that size
-        estates = self.find_new_estates()
+        estates = self._find_new_estates()
         if estates is False:
             return False
 
@@ -354,7 +357,7 @@ class MoveValidator():
                     cp_claimed = cp
                     break
 
-            # check that the score claimed by the player matches the score in the 
+            # check that the score claimed by the player matches the score in 
             # game state
             if self._game_st.city_plans_won[i]:
                 if cp_score != cp_claimed.score2:
@@ -368,8 +371,6 @@ class MoveValidator():
             for estate_size in cp_claimed.criteria:
                 if estate_size in estates:
                     estates[estate_size] -= 1
-                    # if there's no estates left with this size, remove 
-                    # it from the dictionary
                     if estates[estate_size] == 0:
                         del estates[estate_size]
                 else:
