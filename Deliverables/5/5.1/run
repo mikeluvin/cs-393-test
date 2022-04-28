@@ -1,2 +1,2 @@
 #!/bin/bash
-python3 ../../src/test_driver_5.py
+python3 ../../src/test_driver_5.py generate

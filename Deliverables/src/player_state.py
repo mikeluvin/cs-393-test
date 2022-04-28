@@ -1,6 +1,7 @@
 import json
 from state_helpers import *
 from exception import *
+from collections import defaultdict
 
 class Home():
     def __init__(self, home_lst: list) -> None:
@@ -334,6 +335,40 @@ class Street():
         self.homes[home_idx].num = new_num
         self.check_homes_increasing_and_bis()
 
+    def parks_score(self) -> int:
+        # (mex number of parks)* 4 - 2 = max score
+        return self._parks * 2 if self._parks != self._parks_maxes[self._idx] else self._parks * 4 - 2
+
+    def pools_built(self) -> int:
+        return len(list(filter(lambda x: x, self._pools)))
+    
+    def estates_dict(self) -> dict:
+        ret_dict = defaultdict(int)
+        in_estate = False
+        size_counter = 0
+        for home in self._homes:
+            if home.num != "blank":
+                if home._fence_left:
+                    in_estate = True
+                if in_estate:
+                    size_counter += 1
+                    if size_counter > 6:
+                        size_counter = 0
+                        in_estate = False
+                        continue
+                    if home._fence_right:
+                        ret_dict[size_counter] += 1
+                        size_counter = 0
+                        in_estate = False
+            else:
+                size_counter = 0
+                in_estate = False
+        
+        return ret_dict
+
+    def bis_count(self) -> int:
+        return len(list(filter(lambda h : h.is_bis, self._homes)))
+
     def to_dict(self) -> dict:
         # convert the first home back to the initial representation
         first_home = self._homes[0].to_list()
@@ -434,6 +469,68 @@ class PlayerState():
         if not check_nat(temps) or temps > 11:
             raise PlayerStateException(f"Given {temps}, but temps must be an integer between 0 and 11.")
         self._temps = temps
+    
+    def temps_score(self, temps_lst) -> int:
+        if self._temps == 0:
+            return 0
+        
+        score = [7, 4, 1]
+        if not temps_lst:
+            return score[0]
+
+        temps_lst.append(self._temps)
+        sorted_temps_lst = list(set(temps_lst))
+        sorted_temps_lst.sort(reverse=True)
+        rank = sorted_temps_lst.index(self._temps)
+        return score[rank] if rank < 3 else 0
+
+    def total_cp_scores(self) -> int:
+        total = 0
+        for score in self._cp_scores:
+            if score != "blank":
+                total += score
+        
+        return total
+
+    def calculate_score(self, temps_lst) -> int:
+        total_score = 0
+        pools_count = 0
+        bis_count = 0
+        estates_count_dict = defaultdict(int)
+        estate_scores = {
+            1: [1, 3], 
+            2: [2, 3, 4],
+            3: [3, 4, 5, 6],
+            4: [4, 5, 6, 7, 8],
+            5: [5, 6, 7, 8, 10],
+            6: [6, 7, 8, 10, 12] 
+        }
+        pools_score = [0, 3, 6, 9, 13, 17, 21, 26, 31, 36]
+        bis_score = [0, 1, 3, 6, 9, 12, 16, 20, 24, 28]
+        refusal_score = [0, 0, 3, 5]
+        for street in self._streets:
+            pools_count += street.pools_built()
+            bis_count += street.bis_count()
+            # total estates count
+            for size, ct in street.estates_dict().items():
+                estates_count_dict[size] += ct
+
+            total_score += street.parks_score()
+        
+        estates_total_score = 0
+        for size, ct in estates_count_dict.items():
+            agent_ct = self._agents[size - 1]
+            estates_total_score += estate_scores[size][agent_ct] * ct
+
+        total_score += pools_score[pools_count]
+        total_score += self.total_cp_scores()
+        total_score += self.temps_score(temps_lst)
+        total_score += estates_total_score
+        total_score -= bis_score[bis_count]
+        total_score -= refusal_score[self._refusals]
+
+        return total_score
+
         
     def to_dict(self) -> dict:
         '''
