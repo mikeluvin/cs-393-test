@@ -289,24 +289,16 @@ class MoveValidator():
                     for ccard in self._game_st.ccards:
                         try:
                             # try setting home with the new number
-                            self._place_new_home(street, j, ccard.num)
+                            street.try_place_new_home(j, ccard.num)
                         except StreetException:
                             # change home number back to "blank"
-                            self._place_new_home(street, j, "blank")
+                            street.try_place_new_home(j, "blank")
                         else:
                             # if we can successfully place a home, then the refusal is invalid
-                            self._place_new_home(street, j, "blank")
+                            street.try_place_new_home(j, "blank")
                             return False
 
         return True
-
-    def _place_new_home(self, street: Street, home_idx: int, new_num):
-        # *** something weird happened with the references, had to do this
-        # instead of h.num ***
-        # homes setter method needs the list representation of homes
-        street.homes[home_idx].num = new_num
-        st_dict = street.to_dict()
-        street.homes = st_dict["homes"]
 
     def _find_new_estates(self):
         '''

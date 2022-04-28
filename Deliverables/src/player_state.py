@@ -243,10 +243,10 @@ class Street():
         '''
         Check that the homes don't violate any game rules.
         '''
-        self._check_homes_increasing_and_bis()
+        self.check_homes_increasing_and_bis()
         self._check_homes_pools()
     
-    def _check_homes_increasing_and_bis(self) -> None:
+    def check_homes_increasing_and_bis(self) -> None:
         '''
         Check that: 
         - homes are strictly increasing (except for bis houses)
@@ -325,6 +325,14 @@ class Street():
         3. parks is <= the number of houses filled on this street
         '''
         return check_nat(parks) and parks <= self._parks_maxes[self._idx] and parks <= self._non_bis_ct
+    
+    def try_place_new_home(self, home_idx: int, new_num) -> None:
+        '''
+        Place a new home with new_num at index home_idx and validate that it doesn't
+        break any rules.
+        '''
+        self.homes[home_idx].num = new_num
+        self.check_homes_increasing_and_bis()
 
     def to_dict(self) -> dict:
         # convert the first home back to the initial representation
@@ -372,7 +380,7 @@ class PlayerState():
         return check_valid_lst(agents, 6, check_nat) and all(a <= self._agent_maxes[i] for i, a in enumerate(agents))
 
     @property
-    def streets(self) -> list:
+    def streets(self):
         '''
         Returns the list of Street objects for this PlayerState.
         '''
