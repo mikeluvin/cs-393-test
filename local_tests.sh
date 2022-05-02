@@ -2,7 +2,7 @@
 raco pkg update --all
 
 LOGLEVEL=info
-MAJOR=5
-MINOR=2
+MAJOR=6
+MINOR=1
 TEAM=team23
 racket -O "$LOGLEVEL"@fest -W none -l software-construction-admin -- -M $MAJOR -m $MINOR -n "$TEAM"

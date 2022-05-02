@@ -25,3 +25,7 @@ class ConstructionCardException(Exception):
 class GameStateException(Exception):
     def __init__(self, message="Invalid game state."):
         super().__init__(message)
+
+class PlayerAdapterException(Exception):
+    def __init__(self, message="Invalid network request."):
+        super().__init__(message)
