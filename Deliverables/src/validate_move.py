@@ -1,5 +1,6 @@
 from player_state import *
 from game_state import *
+from exception import MoveException
 from collections import defaultdict
 
 class MoveValidator():
@@ -65,99 +66,68 @@ class MoveValidator():
 
     def validate_move(self):
         '''
-        Returns a boolean indicating whether the move from player_state_1 to
-        player_state_2 is valid.
+        Validates the move from player_state_1 to player_state_2.\n
+        Raises a MoveException otherwise.
         '''
-        if not self._find_street_related_changes():
-            return False
-        if not self._find_rest_of_changes():
-            return False
+        self._find_street_related_changes()
+        self._find_rest_of_changes()
 
-        #
         # now, we have all the changes from ps1 to ps2
         #
         # if a house wasn't built, then a refusal must've been used
-        if not self._houses:
-            if not self._refusals or self.is_effect_used() or self.is_city_plan_updated():
-                return False
-            # otherwise, validate that the refusal was used correctly
-            return self._validate_refusal()    
-        
-        # if change.houses is True, then we can't have used a refusal
-        if self._refusals:
-            return False
+        if self._validate_refusal_or_not() is True:
+            return
             
         # otherwise, a card was played. validate card # used
         # it's possible that the house # matches more than one card. So, return
         # a list of possible cards
         poss_cards = self._validate_card_num()
-        if poss_cards[0][1] == -1:
-            return False
-        
-        # validate effect used
-        poss_effects = [self._game_st.effects[i].effect for i, _ in poss_cards]
-        effect = self._validate_effect()
-        if effect is not None and effect not in poss_effects:
-            return False
-        
+        # validate effect used with the possible cards
+        self._validate_effect(poss_cards)
         # validate city plan changes
-        if not self._validate_used_in_plan():
-            return False
-
-        return True
-
+        self._validate_used_in_plan()
 
     def _find_street_related_changes(self):
         '''
-        Returns a boolean indicating whether the changes in the streets were valid.
-        These fields are: new home(s), parks, and pools.
-        If True, populates the changes in the their respective member variables.
+        Validates the changes in the streets.
+        These fields are: new home(s), parks, and pools.\n
+        If valid, populates the changes in the their respective member variables.
+        Raises a MoveException otherwise.
         '''
-        # compare ps1 and ps2 to find the move
-        # first, let's loop through the streets to find what # card was played
-        # then loop through the construction cards to match with the card played 
-        # if it's not a number in the construction cards set, see if the temps effect is in the effects set + has been used
-        # if it is a number in the construction cards set, match its corresponding effects card
-
         for i, s1 in enumerate(self._ps1.streets):
             s2 = self._ps2.streets[i]
             # loop through homes for each street
             for j, h1 in enumerate(s1.homes):
                 h2 = s2.homes[j]
                 prev_h1 = s1.homes[j-1] if j > 0 else None
-                if not self._find_house_fence_in_plan(i, j, h1, h2, prev_h1):
-                    return False
+                self._find_house_fence_in_plan(i, j, h1, h2, prev_h1)
 
             # determine if a park was built
             if not is_eq_or_mono_incr(s1.parks, s2.parks):
-                return False
+                raise MoveException(f'Parks must stay the same or increase by only one.')
             elif s1.parks + 1 == s2.parks:
-                # can only build one park per turn
-                # must build park in same row as new house
                 if (self._parks is not None or 
                     not self._houses or self._houses[0] != i):
-                    return False
+                    raise MoveException(f'Can only build one park per turn, and it must be \
+                             in the same row as the new house.')
                 self._parks = i
 
             # determine if a pool was built   
             for j, pool1 in enumerate(s1.pools):
                 pool2 = s2.pools[j]
                 if pool1 != pool2:
-                    # can't remove a pool, and can only build one pool per turn
-                    # pool must be built where the house was built
                     if (pool1 or self._pools or 
                         not self._houses or 
                         self._houses[0] != i or self._houses[1] != s2.get_pool_locs()[i][j]):
-                        return False
+                        raise MoveException(f'Cannot remove a pool, and can only build one pool \
+                             in the new house you placed.')
                     self._pools = [i, s2.get_pool_locs()[i][j]]
-
-        return True
 
     def _find_rest_of_changes(self):
         '''
-        Return a boolean indicating whether the changes in temps, refusals,
-        agents, and city plan scores are valid.
-        If True, populates the changes in the their respective member variables.
+        Validates the changes in temps, refusals, agents, and city plan scores.\n
+        If valid, populates the changes in the their respective member variables.
+        Raises a MoveException otherwise.
         '''
         to_check = [
             (self._ps1.temps, self._ps2.temps, "temps"),
@@ -167,7 +137,7 @@ class MoveValidator():
 
         for f1, f2, ch_field in to_check:
             if not is_eq_or_mono_incr(f1, f2):
-                return False
+                raise MoveException(f'{ch_field} must stay the same or increase by only one.')
             elif f1 + 1 == f2:
                 if ch_field == "temps":
                     self._temps = True
@@ -181,10 +151,8 @@ class MoveValidator():
             cp2 = self._ps2.city_plan_score[i]
             if cp1 != cp2:
                 if cp1 != "blank":
-                    return False
+                    raise MoveException(f"You can only claim a city plan once.")
                 self._city_plan_score.append([i, cp2])
-
-        return True
 
     def _find_house_fence_in_plan(self, i:int, j:int, h1: Home, h2: Home, prev_h1: Home):
         '''
@@ -193,43 +161,33 @@ class MoveValidator():
         Returns False if there was an illegal move.
         '''
         if h1.num != h2.num:
-            # make sure that h1 is blank. If not, return False
             if h1.num != "blank":
-                return False
+                raise MoveException(f"Cannot change the number on a house after it's built.")
 
             if h2.is_bis:
-                # can only have one new bis house
                 if self._bis_houses:
-                    return False
+                    raise MoveException(f"You may only build one BIS house per turn.")
                 self._bis_houses = [i, j, h2]
             else:
-                # can only have one new regular house
                 if self._houses:
-                    return False
+                    raise MoveException(f"You may only build one non-BIS house per turn.")
                 # append the new house onto the Change list
                 self._houses = [i, j, h2]
         
         if h1.fence_left != h2.fence_left:
-            # if fence was removed, invalid. return False
             if h1.fence_left:
-                return False
-            # if we've already encountered a new fence, return False
-            # since only one fence can be built per turn
+                raise MoveException(f"Cannot remove a fence from a house.")
             if self._fences:
-                return False
-            # if we try to build a fence between houses that are used
-            # in a plan, that's invalid
+                raise MoveException(f"Cannot build more than one fence per turn.")
             if prev_h1 and prev_h1.in_plan and h1.in_plan:
-                return False
+                raise MoveException(f"Cannot build a fence between houses marked used-in-plan.")
             self._fences = True
 
         if h1.in_plan != h2.in_plan:
-            # if we try to remove from a plan, return False
-            if h1.in_plan:
-                return False
-            self._in_plan.append([i, j, h2])
 
-        return True
+            if h1.in_plan:
+                raise MoveException(f"Cannot remove a house from a city plan.")
+            self._in_plan.append([i, j, h2])
 
     def _validate_card_num(self) -> tuple:
         '''
@@ -246,16 +204,19 @@ class MoveValidator():
         # card 
         if self._temps:
             for i, ccard in enumerate(self._game_st.ccards):
-                possible_cards = set([ccard.num + x for x in range(-2, 3)])
+                possible_cards = set([max(ccard.num + x, 0) for x in range(-2, 3)])
                 if house_num in possible_cards and self._game_st.effects[i] == "temp":
                     poss_cards.append((i, ccard.num))
+
+        if not poss_cards:
+            raise MoveException(f"You must play a card.")
         
-        return poss_cards if poss_cards else [(-1, -1)]
+        return poss_cards
 
-
-    def _validate_effect(self) -> bool:
+    def _validate_effect(self, poss_cards: list):
         '''
-        Return True if the effect used (if any) corresponds to the card used.
+        Validates that the effect used corresponds to one of the possible cards played.
+        Raises a MoveException otherwise.
         '''
         effect_used = None
         effects_lst = [
@@ -269,18 +230,32 @@ class MoveValidator():
         for ch_field, curr_effect in effects_lst:
             if ch_field:
                 if effect_used is not None:
-                    return False
+                    raise MoveException(f"Cannot use multiple effects.")
                 effect_used = curr_effect
 
-        # if we get to this point where either:
+        poss_effects = [self._game_st.effects[i].effect for i, _ in poss_cards]
+        if effect_used is not None and effect_used not in poss_effects:
+            raise MoveException(f"Invalid use of {effect_used} effect.")
+        # if we get to this point, either:
         #   1. an effect was used correctly
-        #   2. no effect was used
-        return effect_used 
+        #   2. no effect was used 
 
-    def _validate_refusal(self) -> bool:
+    def _validate_refusal_or_not(self):
         '''
-        Return a boolean indicating whether playing a refusal is valid.
+        Validates that the use of a refusal (or lack thereof) is valid.\n
+        Returns True if a refusal was succesfully played, None if there was no attempt at a refusal.
+        Raises a MoveException otherwise.
         '''
+        if not self._houses:
+            if not self._refusals:
+                raise MoveException(f"Must either place a house or use a refusal.")
+            if self.is_effect_used() or self.is_city_plan_updated():
+                raise MoveException(f"Cannot use a refusal and an (effect or a city plan).")
+            return self._can_player_place_home()
+        elif self._refusals:
+            raise MoveException(f"Cannot use refusal and place a house.")
+
+    def _can_player_place_home(self) -> bool:
         for i in range(len(self._ps1.streets)):
             street = self._ps1.streets[i]
             for j in range(len(street.homes)):
@@ -296,8 +271,7 @@ class MoveValidator():
                         else:
                             # if we can successfully place a home, then the refusal is invalid
                             street.try_place_new_home(j, "blank")
-                            return False
-
+                            raise MoveException(f"Invalid refusal use, you can place a house.")
         return True
 
     def _find_new_estates(self):
@@ -312,12 +286,12 @@ class MoveValidator():
             if first_home:
                 # first home MUST have a fence on the left, if not, it's invalid.
                 if not h.fence_left:
-                    return False
+                    raise MoveException(f"City plans must be enclosed by fences.")
                 first_home = False
             else:
                 # if not first home, then this home MUST be adjacent to the previous one
                 if row != in_curr_estate[-1][0] or col != in_curr_estate[-1][1] + 1:
-                    return False
+                    raise MoveException(f"Houses used in the same city plan estate must be adjacent.")
 
             in_curr_estate.append((row, col))
 
@@ -331,14 +305,12 @@ class MoveValidator():
                         
     def _validate_used_in_plan(self) -> bool:
         '''
-        Returns a boolean indicating whether the new estates being used in
-        a plan are valid.
+        Validates the new estates being used in a plan. Returns a MoveException
+        otherwise.
         '''
         # first, find all new estates
         # keys are estate sizes, values are # of estates with that size
         estates = self._find_new_estates()
-        if estates is False:
-            return False
 
         # find city plans that were potentially claimed
         for i, cp_score in self._city_plan_score:
@@ -349,14 +321,12 @@ class MoveValidator():
                     cp_claimed = cp
                     break
 
-            # check that the score claimed by the player matches the score in 
-            # game state
             if self._game_st.city_plans_won[i]:
                 if cp_score != cp_claimed.score2:
-                    return False
+                    raise MoveException(f"City plan score invalid.")
             else:
                 if cp_score != cp_claimed.score1:
-                    return False
+                    raise MoveException(f"City plan score invalid.")
 
             # loop through estate size values in criteria and see
             # if there's estates matching those sizes
@@ -368,14 +338,12 @@ class MoveValidator():
                 else:
                     # then, the player tried claiming the points for 
                     # this city plan, but they don't have the correct estates
-                    return False
+                    raise MoveException(f"Invalid claim of city plan with criteria {cp_claimed.criteria}.")
 
         # at this point, all the estates should be used. If there's any left,
         # it's invalid
         if len(estates) > 0:
-            return False
-
-        return True
+            raise MoveException(f"Marked more city plan estates than is allowed.")
 
 
 def is_eq_or_mono_incr(f1: int, f2: int):

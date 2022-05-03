@@ -1,5 +1,6 @@
 import json
 import sys
+from exception import PlayerStateException, GameStateException
 from player_state import PlayerState
 from game_state import GameState
 from parse_input import parse_stdin
@@ -15,7 +16,7 @@ def main():
     input_json = parse_stdin()[0]
     try:
         state = ClassName(input_json).to_dict()
-    except:
+    except (PlayerStateException, GameStateException):
         state = False
 
     print(json.dumps(state))
