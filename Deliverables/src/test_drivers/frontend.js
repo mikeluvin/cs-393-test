@@ -1,6 +1,6 @@
 import process from 'process';
 import fs from "fs";
-import { my_sort } from '../2.2/backend.js';
+import { my_sort } from '../asst2/my_sort.js';
 
 function frontend(inputString) {
     let inputArr = [],

@@ -1,2 +1,3 @@
 #!/bin/bash
+cd ../../src/test_drivers
 node frontend.js

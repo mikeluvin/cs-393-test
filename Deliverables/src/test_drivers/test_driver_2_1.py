@@ -4,7 +4,7 @@ from asst2 import my_sort
 
 def main():
     special_objs = parse_stdin()
-    print(my_sort(json.dumps(special_objs[:10])))
+    print(json.dumps(my_sort(special_objs[:10])))
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 import process from 'process';
-import { my_sort } from './backend.js';
+import { my_sort } from '../asst2/my_sort.js';
 
 function main() {
     // see https://stackoverflow.com/questions/26460324/how-to-work-with-process-stdin-on
