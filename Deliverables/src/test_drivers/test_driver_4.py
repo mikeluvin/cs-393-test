@@ -1,8 +1,8 @@
 import json
 from game_state import GameState
 from player_state import PlayerState
-from parse_input import parse_stdin
-from validate_move import MoveValidator
+from . import parse_stdin
+from moves import MoveValidator
 from exception import MoveException
 
 def main():

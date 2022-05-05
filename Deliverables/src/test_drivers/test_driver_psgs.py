@@ -3,7 +3,7 @@ import sys
 from exception import PlayerStateException, GameStateException
 from player_state import PlayerState
 from game_state import GameState
-from parse_input import parse_stdin
+from . import parse_stdin
 
 def main():
     if sys.argv[1] == "player":

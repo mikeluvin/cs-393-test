@@ -2,8 +2,8 @@ import json
 import sys
 from game_state import GameState
 from player_state import PlayerState
-from parse_input import parse_stdin
-from generate_move import MoveGenerator
+from . import parse_stdin
+from moves import MoveGenerator
 
 def main():
     input_json = parse_stdin()

@@ -29,3 +29,10 @@ def check_increasing(lst: list):
             return False
 
     return True
+
+
+def is_eq_or_mono_incr(f1: int, f2: int):
+    '''
+    Returns a boolean indicating if f1 = f2 or f1 + 1 = f2.
+    '''
+    return f1 == f2 or f1 + 1 == f2

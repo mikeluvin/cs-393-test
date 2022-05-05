@@ -3,11 +3,13 @@ import json
 from exception import PlayerAdapterException
 from game_state import GameState
 from player_state import PlayerState
-from generate_move import MoveGenerator
+from moves import MoveGenerator
 
 class PlayerAdapter():
     def __init__(self, network_config: dict) -> None:
-        # if set(network_config.keys()) != set(["host", "port"]):
+        if set(network_config.keys()) != set(["host", "port"]):
+            return PlayerAdapterException(f"Received {network_config}\n\n, but expected a dictionary \
+                    with keys 'host' and 'port-number'.")
         self.host = network_config["host"]
         self.port = network_config["port"]
         self._create_tcp_connection()
@@ -32,16 +34,22 @@ class PlayerAdapter():
             #validate requests. Maybe use the JSON schema validator?
             req_keys = set(request.keys()) if type(request) == dict else None
             if req_keys == playing_keys:
-                game_state = GameState(request["game-state"])
-                player_state = PlayerState(request["player-state"])
-                new_player_state = MoveGenerator(game_state, player_state).generate_move()
-                self.sock.sendall(bytes(json.dumps(new_player_state.to_dict()) + "\n", "utf-8"))
+                self._play_move(request)
             elif req_keys == game_over_keys:
-                self.sock.sendall(b"\"ack\"\n")
-                self.sock.close()
+                self._end_game()
                 break
             else:
                 raise PlayerAdapterException(f"Received {data}\n\n but request must be a dictionary \
-                        containing keys ('game-state', 'player-state'), or 'game-over'.")
+                        with keys ('game-state', 'player-state'), or 'game-over'.")
 
             data = data[num_bytes:]
+
+    def _play_move(self, request: dict) -> None:
+        game_state = GameState(request["game-state"])
+        player_state = PlayerState(request["player-state"])
+        new_player_state = MoveGenerator(game_state, player_state).generate_move()
+        self.sock.sendall(bytes(json.dumps(new_player_state.to_dict()) + "\n", "utf-8"))
+
+    def _end_game(self):
+        self.sock.sendall(b"\"ack\"\n")
+        self.sock.close()

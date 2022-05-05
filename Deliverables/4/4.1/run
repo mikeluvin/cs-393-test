@@ -1,2 +1,3 @@
 #!/bin/bash
-python3 ../../src/test_driver_4.py
+cd ../../src
+python3 -m test_drivers.test_driver_4

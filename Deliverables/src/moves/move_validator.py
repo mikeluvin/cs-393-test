@@ -2,6 +2,7 @@ from player_state import *
 from game_state import *
 from exception import MoveException
 from collections import defaultdict
+from helpers import is_eq_or_mono_incr
 
 class MoveValidator():
     def __init__(self, game_state: GameState, ps1: PlayerState, ps2: PlayerState) -> None:
@@ -345,9 +346,3 @@ class MoveValidator():
         if len(estates) > 0:
             raise MoveException(f"Marked more city plan estates than is allowed.")
 
-
-def is_eq_or_mono_incr(f1: int, f2: int):
-    '''
-    Returns a boolean indicating if f1 = f2 or f1 + 1 = f2.
-    '''
-    return f1 == f2 or f1 + 1 == f2

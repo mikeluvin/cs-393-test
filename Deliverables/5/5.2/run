@@ -1,2 +1,3 @@
 #!/bin/bash
-python3 ../../src/test_driver_5.py score
+cd ../../src/
+python3 -m test_drivers.test_driver_5 score

@@ -1,4 +1,4 @@
-from parse_input import parse_stdin
+from . import parse_stdin
 from player_adapter import PlayerAdapter
 
 def main():

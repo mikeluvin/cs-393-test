@@ -1,0 +1,1 @@
+from .parse_input import parse_stdin
