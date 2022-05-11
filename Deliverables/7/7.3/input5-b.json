@@ -41,7 +41,7 @@
           [false,7,false],
           [false,9,false],
           [false,10,false],
-          [false,11,false]
+          [false,"blank",false]
         ],
         "parks":0,
         "pools":[false,false,false]
@@ -100,7 +100,7 @@
           [false,7,false],
           [false,9,false],
           [false,10,false],
-          [false,11,false]
+          [false,"blank",false]
         ],
         "parks":0,
         "pools":[false,false,false]

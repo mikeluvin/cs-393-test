@@ -3,7 +3,7 @@
     "city-plans":
     [
       {
-        "criteria":[1,1,1,1,1,1],
+        "criteria":"7 temps",
         "position":1,
         "score1":8,
         "score2":4
@@ -38,7 +38,7 @@
           [false,4,false],
           [false,5,false],
           [false,6,false],
-          [false,7,false],
+          [false,"blank",false],
           [false,9,false],
           [false,10,false],
           [false,11,false]
@@ -73,7 +73,7 @@
           [false,6,false],
           [false,7,false],
           [false,9,false],
-          [false,10,false],
+          [false,"blank",false],
           [false,11,false],
           [false,12,false],
           [false,13,false]
@@ -86,21 +86,21 @@
   },
   {
     "agents":[0,0,0,0,0,0],
-    "city-plan-score":["blank","blank","blank"],
-    "refusals":1,
+    "city-plan-score":["blank","blank",12],
+    "refusals":0,
     "streets":[
       {
         "homes":[
-          1,false,
-          [false,2,false],
+          1,true,
+          [false,2,true],
           [true,"roundabout",false],
-          [true,4,false],
-          [false,5,false],
-          [false,6,false],
-          [false,7,false],
-          [false,9,false],
-          [false,10,false],
-          [false,11,false]
+          [true,4,true],
+          [true,5,true],
+          [false,6,true],
+          [false,7,true],
+          [false,9,true],
+          [false,10,true],
+          [false,11,true]
         ],
         "parks":0,
         "pools":[false,false,false]
@@ -132,7 +132,7 @@
           [false,6,false],
           [false,7,false],
           [false,9,false],
-          [false,10,false],
+          [false,"blank",false],
           [false,11,false],
           [false,12,false],
           [false,13,false]

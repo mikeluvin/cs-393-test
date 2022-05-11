@@ -3,7 +3,7 @@
     "city-plans":
     [
       {
-        "criteria":[1,1,1,1,1,1],
+        "criteria":"7 temps",
         "position":1,
         "score1":8,
         "score2":4
@@ -38,7 +38,7 @@
           [false,4,false],
           [false,5,false],
           [false,6,false],
-          [false,7,false],
+          [false,"blank",false],
           [false,9,false],
           [false,10,false],
           [false,11,false]
@@ -82,12 +82,12 @@
         "pools":[false,false,false]
       }
     ],
-    "temps":0
+    "temps":7
   },
   {
     "agents":[0,0,0,0,0,0],
-    "city-plan-score":["blank","blank","blank"],
-    "refusals":1,
+    "city-plan-score":[8,"blank","blank"],
+    "refusals":0,
     "streets":[
       {
         "homes":[
@@ -141,6 +141,6 @@
         "pools":[false,false,false]
       }
     ],
-    "temps":0
+    "temps":8
   }
 ]
