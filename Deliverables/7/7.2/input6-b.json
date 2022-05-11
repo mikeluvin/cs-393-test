@@ -1,35 +1,19 @@
 {
     "city-plans": [
         {
-            "criteria": [
-                1,
-                1,
-                1,
-                1,
-                1,
-                1
-            ],
+            "criteria": ["all houses", 0],
             "position": 1,
             "score1": 8,
             "score2": 4
         },
         {
-            "criteria": [
-                6,
-                1,
-                1,
-                1
-            ],
+            "criteria": [1,1,2,6],
             "position": 2,
             "score1": 11,
             "score2": 6
         },
         {
-            "criteria": [
-                1,
-                2,
-                6
-            ],
+            "criteria": ["all pools all parks",1],
             "position": 3,
             "score1": 12,
             "score2": 7
@@ -37,26 +21,13 @@
     ],
     "city-plans-won": [
         false,
-        false,
-        false
+        true,
+        true
     ],
     "construction-cards": [
-        [
-            1,
-            "surveyor"
-        ],
-        [
-            2,
-            "landscaper"
-        ],
-        [
-            3,
-            "pool"
-        ]
+        [12,"surveyor"],
+        [2,"landscaper"],
+        [3,"pool"]
     ],
-    "effects": [
-        "agent",
-        "bis",
-        "temp"
-    ]
+    "effects": ["agent","bis","temp"]
 }

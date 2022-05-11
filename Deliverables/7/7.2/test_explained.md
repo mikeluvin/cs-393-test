@@ -1,0 +1,10 @@
+- input1: has a criteria-card-1 in the criteria list
+- input2: city plan won
+- input3: won all criteria-card city plans
+- input4: no plans won
+- input5: two city plans won
+- input6: criteria-card-2 in position 3
+- input7: criteria-card-1 in position 2
+- input8: missing one city plan
+- input9: has two position 1 city plans
+- input10: wrong criteria

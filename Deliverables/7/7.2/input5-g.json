@@ -1,62 +1,30 @@
 {
-    "city-plans": [
+    "city-plans":[
         {
-            "criteria": [
-                1,
-                1,
-                1,
-                1,
-                1,
-                1
-            ],
-            "position": 1,
-            "score1": 10,
-            "score2": 5
+            "criteria":"7 temps",
+            "position":1,
+            "score1":8,
+            "score2":3
         },
         {
-            "criteria": [
-                1,
-                1,
-                1,
-                6
-            ],
-            "position": 2,
-            "score1": 13,
-            "score2": 8
+            "criteria":["all pools all parks",1],
+            "position":2,
+            "score1":6,
+            "score2":3
         },
         {
-            "criteria": [
-                1,
-                2,
-                6
-            ],
-            "position": 3,
-            "score1": 11,
-            "score2": 5
+            "criteria":[1,1,2,6],
+            "position":3,
+            "score1":12,
+            "score2":7
         }
     ],
-    "city-plans-won": [
-        true,
-        false,
-        false
+    "city-plans-won":[true,false,true],
+    "construction-cards":
+    [
+        [1,"surveyor"],
+        [2,"landscaper"],
+        [3,"pool"]
     ],
-    "construction-cards": [
-        [
-            12,
-            "surveyor"
-        ],
-        [
-            15,
-            "bis"
-        ],
-        [
-            1,
-            "pool"
-        ]
-    ],
-    "effects": [
-        "surveyor",
-        "temp",
-        "landscaper"
-    ]
+    "effects":["agent","bis","temp"]
 }

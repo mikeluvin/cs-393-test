@@ -1,62 +1,30 @@
 {
-    "city-plans": [
+    "city-plans":[
         {
-            "criteria": [
-                1,
-                1,
-                1,
-                1,
-                1,
-                1
-            ],
-            "position": 1,
-            "score1": 8,
-            "score2": 4
+            "criteria":[1,1,1],
+            "position":2,
+            "score1":8,
+            "score2":3
         },
         {
-            "criteria": [
-                1,
-                1,
-                1,
-                6
-            ],
-            "position": 2,
-            "score1": 11,
-            "score2": 6
+            "criteria":["all houses",0],
+            "position":1,
+            "score1":6,
+            "score2":3
         },
         {
-            "criteria": [
-                1,
-                2,
-                6
-            ],
-            "position": 3,
-            "score1": 12,
-            "score2": 7
+            "criteria":[1,2,6],
+            "position":3,
+            "score1":12,
+            "score2":7
         }
     ],
-    "city-plans-won": [
-        false,
-        false,
-        true
+    "city-plans-won":[false,false,false],
+    "construction-cards":
+    [
+        [1,"surveyor"],
+        [2,"landscaper"],
+        [3,"pool"]
     ],
-    "construction-cards": [
-        [
-            12,
-            "surveyor"
-        ],
-        [
-            2,
-            "landscaper"
-        ],
-        [
-            3,
-            "pool"
-        ]
-    ],
-    "effects": [
-        "agent",
-        "bis",
-        "temp"
-    ]
+    "effects":["agent","bis","temp"]
 }
