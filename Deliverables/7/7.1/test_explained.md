@@ -1,0 +1,10 @@
+- input1: built a park with a roundabout (invalid)
+- input3: 3 refusals used with a valid roundabout 
+- input6: city plan used with a valid roundabout included
+- input7: placed a valid roundabout between bises
+- input8: agents used with a valid roundabout 
+- input11: placed three roundabouts in total (invalid)
+- input12: valid roundabout
+- input14: only one fence for a roundabout (invalid)
+- input15: played a roundabout but pool is crossed off (invalid)
+- input20: played a "bis" next to a roundabout (invalid)
