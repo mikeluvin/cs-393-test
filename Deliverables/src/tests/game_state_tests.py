@@ -81,11 +81,11 @@ class TestCityPlan(unittest.TestCase):
             [ "all pools no parks", 2 ],
             "all pools one park one roundabout",
             # criteria1 cards
-            [ "all houses", 1 ],
-            [ "all houses", 3 ],
-            "end house",
-            "2 temps",
-            "9 bis"
+            [ "all houses", 0 ],
+            [ "all houses", 2 ],
+            "end houses",
+            "7 temps",
+            "5 bis"
         ]
         cp_dict = {
             "position": 2,
@@ -100,11 +100,11 @@ class TestCityPlan(unittest.TestCase):
     def test_invalid_special_criteria_in_posn3(self):
         bad_criteria = [
             # criteria1 cards
-            [ "all houses", 1 ],
-            [ "all houses", 3 ],
-            "end house",
-            "2 temps",
-            "9 bis",
+            [ "all houses", 0 ],
+            [ "all houses", 2 ],
+            "end houses",
+            "7 temps",
+            "5 bis"
             # criteria 2 cards
             "two streets all parks",
             "two streets all pools",
@@ -121,9 +121,6 @@ class TestCityPlan(unittest.TestCase):
             cp_dict["criteria"] = criteria
             with self.assertRaises(CityPlanException):
                 CityPlan(cp_dict)
-
-
-
 
 
 if __name__ == "__main__":

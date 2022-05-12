@@ -22,8 +22,8 @@ class CityPlan():
     @criteria.setter
     def criteria(self, criteria: list) -> None:
         # criteria must be a list of naturals, or one of the special cases (below)
-        is_lst_ints = check_valid_lst(criteria, None, check_nat) and check_increasing(criteria)
-        if not is_lst_ints:
+        is_incr_lst_ints = check_valid_lst(criteria, None, check_nat) and check_increasing(criteria)
+        if not is_incr_lst_ints:
             # then check if it's one of the special cases
             if not (self.position < 3 and criteria in CRITERIA_CARDS[self.position-1]):
                 raise CityPlanException(f"Given {criteria}, but city plan 'criteria' must be a list of \
