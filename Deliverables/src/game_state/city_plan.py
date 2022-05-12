@@ -1,6 +1,7 @@
 import json
 from exception import *
 from helpers import *
+from constants import CRITERIA_CARDS, VALID_POSNS
 
 class CityPlan():
     def __init__(self, cp_dict: dict) -> None:
@@ -9,10 +10,8 @@ class CityPlan():
             raise CityPlanException(f"A city-plan must be a dictionary containing only these keys: {cp_keys}")
         criteria, position, score1, score2 = cp_dict["criteria"], cp_dict["position"], cp_dict["score1"], cp_dict["score2"]
 
-        # valid city plan positions are 1, 2, or 3
-        self._valid_posns = set(range(1, 4))
-        self.criteria = criteria
         self.position = position
+        self.criteria = criteria
         self.score1 = score1
         self.score2 = score2
 
@@ -22,9 +21,13 @@ class CityPlan():
 
     @criteria.setter
     def criteria(self, criteria: list) -> None:
-        # criteria must be a list of naturals
-        if not check_valid_lst(criteria, None, check_nat) or not check_increasing(criteria):
-            raise CityPlanException(f"Given {criteria}, but city plan 'criteria' must be a list of integers.")
+        # criteria must be a list of naturals, or one of the special cases (below)
+        is_lst_ints = check_valid_lst(criteria, None, check_nat) and check_increasing(criteria)
+        if not is_lst_ints:
+            # then check if it's one of the special cases
+            if not (self.position < 3 and criteria in CRITERIA_CARDS[self.position-1]):
+                raise CityPlanException(f"Given {criteria}, but city plan 'criteria' must be a list of \
+                    integers or one of the specified criteria cards.")
         self._criteria = criteria
     
     @property
@@ -33,7 +36,7 @@ class CityPlan():
     
     @position.setter
     def position(self, position) -> None:
-        if not check_type_and_membership(position, int, self._valid_posns):
+        if not check_type_and_membership(position, int, VALID_POSNS):
             raise CityPlanException(f"Given {position}, but city plan 'position' must be either 1, 2, or 3.")
         self._position = position
 
