@@ -27,7 +27,7 @@ class TestHome(unittest.TestCase):
         with self.assertRaises(HomeException):
             Home(home_lst)
     
-    # pass a valid bis housee
+    # pass a valid bis house
     def test_valid_bis(self):
         home_lst = [False, [6, "bis"], False, False]
         home = Home(home_lst)
@@ -68,7 +68,30 @@ class TestHome(unittest.TestCase):
         home_lst = [False, "house1", True, False]
         with self.assertRaises(HomeException):
             Home(home_lst)
+
+    # pass a valid roundabout house
+    def test_valid_roundabout(self):
+        home_lst = [True, "roundabout", False, True]
+        home = Home(home_lst)
+        self.assertEqual(home.to_list(), home_lst[:3])
     
+    # pass a invalid roundabout house, no left fence
+    def test_invalid_roundabout1(self):
+        home_lst = [False, "roundabout", False, True]
+        with self.assertRaises(HomeException):
+            Home(home_lst)
+        
+    # pass a invalid roundabout house, no fences
+    def test_invalid_roundabout2(self):
+        home_lst = [False, "roundabout", False, False]
+        with self.assertRaises(HomeException):
+            Home(home_lst)
+    
+    # pass a invalid roundabout house, marked used-in-plan
+    def test_invalid_roundabout3(self):
+        home_lst = [True, "roundabout", True, True]
+        with self.assertRaises(HomeException):
+            Home(home_lst)
     
 class TestStreet(unittest.TestCase):
     # additional keys
@@ -233,7 +256,7 @@ class TestStreet(unittest.TestCase):
     # bis cannot have a pool  
     def test_invalid_bis_pool(self):
         st_dict = {
-            "homes": ["blank",False,[False,"blank",False],[False,[2, "bis"],False],[False,"blank",False],[True,"blank",False],[False,"blank",False],[False,"blank",False],[False,"blank",False],[False,"blank",False],[False,"blank",False]],
+            "homes": ["blank",False,[False,2,False],[False,[2, "bis"],False],[False,"blank",False],[True,"blank",False],[False,"blank",False],[False,"blank",False],[False,"blank",False],[False,"blank",False],[False,"blank",False]],
             "parks": 0,
             "pools": [True, False, False]
         }
@@ -327,6 +350,46 @@ class TestStreet(unittest.TestCase):
             "homes": ["blank",False,[False,"blank",False],[False,[2, "bis"],False],[False,2,False],[False,[2, "bis"],False],[False,"blank",False],[False,"blank",False],[False,"blank",False],[False,"blank",False],[False,"blank",False],[False,"blank",False]],
             "parks": 0,
             "pools": [False, False, False]
+        }
+        with self.assertRaises(StreetException):
+            Street(st_dict, 0)
+
+    # valid roundabout
+    def test_valid_roundabout(self):
+        st_dict = {
+            "homes": ["blank",False,[False,2,False],[False,[2, "bis"],False],[True,"roundabout",False],[True,1,False],[False,"blank",False],[False,5,False],[False,"blank",False],[False,"blank",False],[False,"blank",False]],
+            "parks": 0,
+            "pools": [False, False, False]
+        }
+        street = Street(st_dict, 0)
+        self.assertEqual(street.to_dict(), st_dict)
+
+    # bis on opposite side of roundabout
+    def test_invalid_bis_roundabout(self):
+        st_dict = {
+            "homes": ["blank",False,[False,1,False],[False,[2, "bis"],False],[True,"roundabout",False],[True,2,False],[False,"blank",False],[False,5,False],[False,"blank",False],[False,"blank",False],[False,"blank",False]],
+            "parks": 0,
+            "pools": [False, False, False]
+        }
+        with self.assertRaises(StreetException):
+            Street(st_dict, 0)
+
+    # 3 parks but only two non-bis houses
+    def test_invalid_parks_roundabout(self):
+        st_dict = {
+            "homes": ["blank",False,[False,2,False],[False,[2, "bis"],False],[True,"roundabout",False],[True,1,False],[False,"blank",False],[False,"blank",False],[False,"blank",False],[False,"blank",False],[False,"blank",False]],
+            "parks": 3,
+            "pools": [False, False, False]
+        }
+        with self.assertRaises(StreetException):
+            Street(st_dict, 0)
+
+    # roundabout cannot have a pool  
+    def test_invalid_roundabout_pool(self):
+        st_dict = {
+            "homes": ["blank",False,[False,"blank",False],[True,"roundabout",False],[True,"blank",False],[True,"blank",False],[False,"blank",False],[False,"blank",False],[False,"blank",False],[False,"blank",False],[False,"blank",False]],
+            "parks": 0,
+            "pools": [True, False, False]
         }
         with self.assertRaises(StreetException):
             Street(st_dict, 0)

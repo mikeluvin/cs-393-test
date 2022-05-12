@@ -1,6 +1,6 @@
 import json
 from helpers import *
-from exception import *
+from exception import StreetException
 from . import Home
 from collections import defaultdict
 
@@ -56,8 +56,10 @@ class Street():
 
     @parks.setter
     def parks(self, parks: list) -> None:
-        if not self._validate_parks(parks):
-            raise StreetException(f"Given {parks}, but parks must be a natural no greater than {self._parks_maxes[self._idx]}.")
+        # count number of non-bis houses
+        non_bis_ct = [type(h.num) == int and not h.is_bis for h in self._homes].count(True)
+        if not self._validate_parks(parks, non_bis_ct):
+            raise StreetException(f"Given {parks}, but parks must be a natural no greater than {min(non_bis_ct, self._parks_maxes[self._idx])}.")
         self._parks = parks
 
     def get_pool_locs(self):
@@ -105,23 +107,33 @@ class Street():
         '''
         Check that the homes don't violate any game rules.
         '''
-        self.check_homes_increasing_and_bis()
+        self._check_homes_increasing()
+        self._check_homes_bis()
         self._check_homes_pools()
+
+    def _check_homes_increasing(self) -> None:
+        '''
+        Check that homes are increasing. Accounts for roundabouts.
+        '''
+        prev_non_bis = -1
+        for i, home in enumerate(self._homes):
+            if home.is_bis or home.num == "blank":
+                continue
+            if home.num == "roundabout":
+                prev_non_bis = -1
+                continue
+            if home.num <= prev_non_bis:
+                raise StreetException(f"Violation in street {self._idx + 1}: non-bis house numbers must be strictly increasing.")
+            
+            prev_non_bis = home.num
     
-    def check_homes_increasing_and_bis(self) -> None:
+    def _check_homes_bis(self) -> None:
         '''
         Check that: 
-        - homes are strictly increasing (except for bis houses)
         - bis houses are the same number as an adjacent house
         - bis houses are not separated by fences 
         - bis house(s) have a non-bis origin house
         '''
-        # keep track of the previous non-bis house to verify the homes are
-        # strictly increasing
-        prev_non_bis = -1
-        # this member variable is used when we check the parks in this street 
-        # (which is NOT in this function)
-        self._non_bis_ct = 0
         # bis_anchor: the "anchor" non-bis house, which is located to the left
         # of the bis house(s). 
         # bis_anchor is None if there's no anchor, the house number otherwise
@@ -154,12 +166,7 @@ class Street():
                     bis_anchor, bis_obligation = None, None
                     continue
 
-                if curr_num <= prev_non_bis:
-                    raise StreetException(f"Violation in street {self._idx + 1}: non-bis house numbers must be strictly increasing.")
-                
-                prev_non_bis, bis_anchor = curr_num, curr_num
-                bis_obligation = None
-                self._non_bis_ct += 1
+                bis_anchor, bis_obligation = curr_num, None
                     
         # if we make it outside the loop but still fulfilled the bis_obligation, it's invalid
         if bis_obligation is not None:
@@ -167,26 +174,24 @@ class Street():
                 
     def _check_homes_pools(self) -> None:
         '''
-        Check that a house with a pool:
-        1. isn't blank
-        2. isn't bis
+        Check that a house with a pool isn't a blank, bis, or roundabout
         '''
         curr_pool_locs = self._pool_locs[self._idx]
         for i, has_pool in enumerate(self._pools):
             if has_pool:
                 home = self._homes[curr_pool_locs[i]]
-                if home.num == "blank" or home.is_bis:
-                    raise StreetException(f"Violation in street {self._idx + 1}: pool cannot be on a bis or blank house.")
+                if type(home.num) != int or home.is_bis:
+                    raise StreetException(f"Violation in street {self._idx + 1}: pool cannot be on a blank, bis, or roundabout house.")
 
 
-    def _validate_parks(self, parks: int) -> bool:
+    def _validate_parks(self, parks: int, non_bis_ct: int) -> bool:
         '''
         Returns True if the following are True:
         1. parks is a natural
         2. parks is <= the max value for its street
-        3. parks is <= the number of houses filled on this street
+        3. parks is <= the number of non-bis houses filled on this street
         '''
-        return check_nat(parks) and parks <= self._parks_maxes[self._idx] and parks <= self._non_bis_ct
+        return check_nat(parks) and parks <= self._parks_maxes[self._idx] and parks <= non_bis_ct
     
     def try_place_new_home(self, home_idx: int, new_num) -> None:
         '''
@@ -194,7 +199,8 @@ class Street():
         break any rules.
         '''
         self.homes[home_idx].num = new_num
-        self.check_homes_increasing_and_bis()
+        self._check_homes_increasing()
+        self._check_homes_bis()
 
     def parks_score(self) -> int:
         # (mex number of parks)* 4 - 2 = max score
@@ -229,6 +235,9 @@ class Street():
 
     def bis_count(self) -> int:
         return [h.is_bis for h in self._homes].count(True)
+
+    def roundabout_count(self) -> int:
+        return [h.num == "roundabout" for h in self._homes].count(True)
 
     def to_dict(self) -> dict:
         # convert the first home back to the initial representation

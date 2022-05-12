@@ -1,6 +1,6 @@
 import json
 from helpers import *
-from exception import *
+from exception import PlayerStateException
 from . import Street
 from collections import defaultdict
 
@@ -41,6 +41,10 @@ class PlayerState():
         if not check_valid_lst(streets, 3, lambda x: type(x) == dict):
             raise PlayerStateException(f"Given {streets}, but streets must be a list 3 dictionaries.")
         self._streets = [Street(st, i) for i, st in enumerate(streets)]
+
+        num_roundabouts = sum([street.roundabout_count() for street in self._streets])
+        if num_roundabouts > 2:
+            raise PlayerStateException(f"You can only play two roundabouts in a game.")
 
     @property
     def agents(self):
