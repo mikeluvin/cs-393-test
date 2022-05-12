@@ -116,7 +116,7 @@ class Street():
         Check that homes are increasing. Accounts for roundabouts.
         '''
         prev_non_bis = -1
-        for i, home in enumerate(self._homes):
+        for home in self._homes:
             if home.is_bis or home.num == "blank":
                 continue
             if home.num == "roundabout":
@@ -199,8 +199,7 @@ class Street():
         break any rules.
         '''
         self.homes[home_idx].num = new_num
-        self._check_homes_increasing()
-        self._check_homes_bis()
+        self._check_homes_rule_violations()
 
     def parks_score(self) -> int:
         # (mex number of parks)* 4 - 2 = max score
