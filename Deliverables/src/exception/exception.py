@@ -33,6 +33,9 @@ class ConstructionCardException(GameStateException):
     def __init__(self, message="Invalid construction card."):
         super().__init__(message)
 
+class CriteriaException(GameStateException):
+    def __init__(self, message="Invalid criteria."):
+        super().__init__(message)
 
 class MoveException(Exception):
     def __init__(self, message="Invalid move."):
