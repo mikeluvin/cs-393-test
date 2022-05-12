@@ -15,7 +15,7 @@ class MoveValidator():
         self._ps1 = ps1
         self._ps2 = ps2
         # if True, check that surveyor was used
-        self._fences = False
+        self._surveyor = False
         # check that the # on the house corresponds to the correct ConstructionCard
         # holds: [row, col, House object]
         self._houses = []
@@ -38,12 +38,14 @@ class MoveValidator():
         self._refusals = False
         # holds: list of [city_plan_idx, score_claimed]
         self._city_plan_score = []
+        # store the row, col of roundabout
+        self._roundabout = []
 
     def is_effect_used(self) -> bool:
         '''
         Returns True if there was an effect used on this turn.
         '''
-        return self._fences or self._bis_houses or self._parks or self._pools or self._temps or self._agents
+        return self._surveyor or self._bis_houses or self._parks or self._pools or self._temps or self._agents
 
     def is_city_plan_updated(self) -> bool:
         '''
@@ -53,7 +55,7 @@ class MoveValidator():
         
     def to_dict(self) -> dict:
         dict_repr = {
-            "fences": self._fences,
+            "fences": self._surveyor,
             "houses": self._houses,
             "in_plan": self._in_plan,
             "parks": self._parks,
@@ -165,6 +167,12 @@ class MoveValidator():
             if h1.num != "blank":
                 raise MoveException(f"Cannot change the number on a house after it's built.")
 
+            if h2.num == "roundabout":
+                if self._roundabout:
+                    raise MoveException(f"Cannot build more than one roundabout per turn.")
+                self._roundabout = [i, j]
+                return
+
             if h2.is_bis:
                 if self._bis_houses:
                     raise MoveException(f"You may only build one BIS house per turn.")
@@ -178,14 +186,15 @@ class MoveValidator():
         if h1.fence_left != h2.fence_left:
             if h1.fence_left:
                 raise MoveException(f"Cannot remove a fence from a house.")
-            if self._fences:
+            if self._surveyor:
                 raise MoveException(f"Cannot build more than one fence per turn.")
             if prev_h1 and prev_h1.in_plan and h1.in_plan:
                 raise MoveException(f"Cannot build a fence between houses marked used-in-plan.")
-            self._fences = True
+            # ignore left fence of house adjacent to roundabout
+            if not (self._roundabout and self._roundabout == [i, j-1]):
+                self._surveyor = True
 
         if h1.in_plan != h2.in_plan:
-
             if h1.in_plan:
                 raise MoveException(f"Cannot remove a house from a city plan.")
             self._in_plan.append([i, j, h2])
@@ -221,7 +230,7 @@ class MoveValidator():
         '''
         effect_used = None
         effects_lst = [
-            (self._fences, "surveyor"), 
+            (self._surveyor, "surveyor"), 
             (self._bis_houses, "bis"), 
             (self._agents, "agent"), 
             (self._temps, "temp"),
