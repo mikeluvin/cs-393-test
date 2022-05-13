@@ -57,7 +57,8 @@ class Criteria():
             else:
                 # then, the player tried claiming the points for 
                 # this city plan, but they don't have the correct estates
-                raise MoveException(f"Invalid claim of city plan with criteria {self._valid_criteria}.")
+                return False
+        return True
 
     def _is_all_houses_satisfied(self, street: Street) -> bool:
         return all([type(h.num) == int and h.in_plan for h in street.homes])
@@ -90,7 +91,7 @@ class Criteria():
         return any([self._is_all_pools_all_parks_satisfied(s, i) and s.roundabout_count() > 0 for i, s in enumerate(streets)])
 
     def to_list_or_string(self):
-        return self._valid_criteria
+        return self._valid_criteria if self._is_incr_lst_ints else self._valid_criteria.value
 
     def __repr__(self) -> str:
         return json.dumps(self.to_list_or_string())

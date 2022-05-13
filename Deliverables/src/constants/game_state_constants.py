@@ -1,4 +1,5 @@
 from enum import Enum
+import json
 
 # valid city plan positions are 1, 2, or 3
 VALID_POSNS = set(range(1, 4))
@@ -14,6 +15,9 @@ class CriteriaCard(Enum):
     ALL_POOLS_ALL_PARKS_1 = [ "all pools all parks", 1 ]
     ALL_POOLS_ALL_PARKS_2 = [ "all pools all parks", 2 ]
     ALL_POOLS_ALL_PARKS_ONE_ROUNDABOUT = "all pools all parks one roundabout"
+
+    def __repr__(self) -> str:
+        return json.dumps(self.value)
 
 
 VALID_CRITERIA_CARDS = [

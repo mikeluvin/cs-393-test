@@ -3,16 +3,16 @@
     "city-plans":
     [
       {
-        "criteria":[1,1,1,1,1,1],
-        "position":1,
-        "score1":8,
-        "score2":4
-      },
-      {
         "criteria":"all pools all parks one roundabout",
         "position":2,
         "score1":11,
         "score2":6
+      },
+      {
+        "criteria":[1,1,1,1,1,1],
+        "position":1,
+        "score1":8,
+        "score2":4
       },
       {
         "criteria":[1,2,6],
@@ -86,7 +86,7 @@
   },
   {
     "agents":[0,0,0,0,0,0],
-    "city-plan-score":["blank",11,"blank"],
+    "city-plan-score":[11,"blank","blank"],
     "refusals":0,
     "streets":[
       {

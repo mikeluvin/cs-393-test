@@ -322,15 +322,15 @@ class MoveValidator():
         # first, find all new estates
         # keys are estate sizes, values are # of estates with that size
         estates = self._find_new_estates()
-
         # find city plans that were potentially claimed
         for i, cp_score in self._city_plan_score:
             # get city plan with "position" i+1
-            cp_claimed = None
-            for cp in self._game_st.city_plans:
-                if cp.position == i + 1:
-                    cp_claimed = cp
-                    break
+            # cp_claimed = None
+            # for cp in self._game_st.city_plans:
+            #     if cp.position == i + 1:
+            #         cp_claimed = cp
+            #         break
+            cp_claimed = self._game_st.city_plans[i]
 
             if self._game_st.city_plans_won[i]:
                 if cp_score != cp_claimed.score2:
@@ -339,7 +339,8 @@ class MoveValidator():
                 if cp_score != cp_claimed.score1:
                     raise MoveException(f"City plan score invalid.")
             
-            cp_claimed.criteria.is_satisfied(self._ps2, estates)
+            if not cp_claimed.criteria.is_satisfied(self._ps2, estates):
+                raise MoveException(f"Incorrectly attemped to claim city plan {cp_claimed}.")
 
             # # loop through estate size values in criteria and see
             # # if there's estates matching those sizes
@@ -353,8 +354,9 @@ class MoveValidator():
             #         # this city plan, but they don't have the correct estates
             #         raise MoveException(f"Invalid claim of city plan with criteria {cp_claimed.criteria}.")
 
+        return True
         # at this point, all the estates should be used. If there's any left,
         # it's invalid
-        if len(estates) > 0:
-            raise MoveException(f"Marked more city plan estates than is allowed.")
+        # if len(estates) > 0:
+        #     raise MoveException(f"Marked more city plan estates than is allowed.")
 
