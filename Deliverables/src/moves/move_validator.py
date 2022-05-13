@@ -1,6 +1,7 @@
 from player_state import *
 from game_state import *
 from exception import MoveException
+from constants import POOL_LOCS
 from collections import defaultdict
 from helpers import is_eq_or_mono_incr
 
@@ -121,10 +122,10 @@ class MoveValidator():
                 if pool1 != pool2:
                     if (pool1 or self._pools or 
                         not self._houses or 
-                        self._houses[0] != i or self._houses[1] != s2.get_pool_locs()[i][j]):
+                        self._houses[0] != i or self._houses[1] != POOL_LOCS[i][j]):
                         raise MoveException(f'Cannot remove a pool, and can only build one pool \
                              in the new house you placed.')
-                    self._pools = [i, s2.get_pool_locs()[i][j]]
+                    self._pools = [i, POOL_LOCS[i][j]]
 
     def _find_rest_of_changes(self):
         '''
@@ -161,7 +162,6 @@ class MoveValidator():
         '''
         Determines if h2 is different from h1, and if so, what the changes were.
         Updates the member variables with the corresponding change.\n
-        Returns False if there was an illegal move.
         '''
         if h1.num != h2.num:
             if h1.num != "blank":
@@ -186,7 +186,8 @@ class MoveValidator():
         if h1.fence_left != h2.fence_left:
             if h1.fence_left:
                 raise MoveException(f"Cannot remove a fence from a house.")
-            if self._surveyor:
+            # ignore left fence of house adjacent to roundabout
+            if self._surveyor and not (self._roundabout and self._roundabout == [i, j-1]):
                 raise MoveException(f"Cannot build more than one fence per turn.")
             if prev_h1 and prev_h1.in_plan and h1.in_plan:
                 raise MoveException(f"Cannot build a fence between houses marked used-in-plan.")
@@ -315,7 +316,7 @@ class MoveValidator():
                         
     def _validate_used_in_plan(self) -> bool:
         '''
-        Validates the new estates being used in a plan. Returns a MoveException
+        Validates the new estates being used in a plan. Raises MoveException
         otherwise.
         '''
         # first, find all new estates
@@ -337,18 +338,20 @@ class MoveValidator():
             else:
                 if cp_score != cp_claimed.score1:
                     raise MoveException(f"City plan score invalid.")
+            
+            cp_claimed.criteria.is_satisfied(self._ps2, estates)
 
-            # loop through estate size values in criteria and see
-            # if there's estates matching those sizes
-            for estate_size in cp_claimed.criteria:
-                if estate_size in estates:
-                    estates[estate_size] -= 1
-                    if estates[estate_size] == 0:
-                        del estates[estate_size]
-                else:
-                    # then, the player tried claiming the points for 
-                    # this city plan, but they don't have the correct estates
-                    raise MoveException(f"Invalid claim of city plan with criteria {cp_claimed.criteria}.")
+            # # loop through estate size values in criteria and see
+            # # if there's estates matching those sizes
+            # for estate_size in cp_claimed.criteria:
+            #     if estate_size in estates:
+            #         estates[estate_size] -= 1
+            #         if estates[estate_size] == 0:
+            #             del estates[estate_size]
+            #     else:
+            #         # then, the player tried claiming the points for 
+            #         # this city plan, but they don't have the correct estates
+            #         raise MoveException(f"Invalid claim of city plan with criteria {cp_claimed.criteria}.")
 
         # at this point, all the estates should be used. If there's any left,
         # it's invalid

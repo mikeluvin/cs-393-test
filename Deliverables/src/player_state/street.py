@@ -2,16 +2,13 @@ import json
 from helpers import *
 from exception import StreetException
 from . import Home
+from constants import PARK_MAXES, POOL_LOCS
 from collections import defaultdict
 
 class Street():
     def __init__(self, st_dict: dict, st_idx: int) -> None:
         # index of this street
         self._idx = st_idx
-        # number of parks in each street
-        self._parks_maxes = [3, 4, 5]
-        # pool locations for each street
-        self._pool_locs = [[2, 6, 7], [0, 3, 7], [1, 6, 10]]
         st_keys = set(["homes", "parks", "pools"])
         if type(st_dict) != dict or set(st_dict.keys()) != st_keys:
             raise StreetException(f"A street must be a dictionary containing only these keys: {st_keys}")
@@ -59,11 +56,8 @@ class Street():
         # count number of non-bis houses
         non_bis_ct = [type(h.num) == int and not h.is_bis for h in self._homes].count(True)
         if not self._validate_parks(parks, non_bis_ct):
-            raise StreetException(f"Given {parks}, but parks must be a natural no greater than {min(non_bis_ct, self._parks_maxes[self._idx])}.")
+            raise StreetException(f"Given {parks}, but parks must be a natural no greater than {min(non_bis_ct, PARK_MAXES[self._idx])}.")
         self._parks = parks
-
-    def get_pool_locs(self):
-        return self._pool_locs
 
     def _build_homes(self, homes: list) -> None:
         '''
@@ -176,7 +170,7 @@ class Street():
         '''
         Check that a house with a pool isn't a blank, bis, or roundabout
         '''
-        curr_pool_locs = self._pool_locs[self._idx]
+        curr_pool_locs = POOL_LOCS[self._idx]
         for i, has_pool in enumerate(self._pools):
             if has_pool:
                 home = self._homes[curr_pool_locs[i]]
@@ -191,7 +185,7 @@ class Street():
         2. parks is <= the max value for its street
         3. parks is <= the number of non-bis houses filled on this street
         '''
-        return check_nat(parks) and parks <= self._parks_maxes[self._idx] and parks <= non_bis_ct
+        return check_nat(parks) and parks <= PARK_MAXES[self._idx] and parks <= non_bis_ct
     
     def try_place_new_home(self, home_idx: int, new_num) -> None:
         '''
@@ -203,7 +197,7 @@ class Street():
 
     def parks_score(self) -> int:
         # (mex number of parks)* 4 - 2 = max score
-        return self._parks * 2 if self._parks != self._parks_maxes[self._idx] else self._parks * 4 - 2
+        return self._parks * 2 if self._parks != PARK_MAXES[self._idx] else self._parks * 4 - 2
 
     def pools_built(self) -> int:
         return self._pools.count(True)

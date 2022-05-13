@@ -1,7 +1,8 @@
 import json
 from exception import *
 from helpers import *
-from constants import CRITERIA_CARDS, VALID_POSNS
+from . import Criteria
+from constants import VALID_CRITERIA_CARDS, VALID_POSNS
 
 class CityPlan():
     def __init__(self, cp_dict: dict) -> None:
@@ -20,15 +21,8 @@ class CityPlan():
         return self._criteria
 
     @criteria.setter
-    def criteria(self, criteria: list) -> None:
-        # criteria must be a list of naturals, or one of the special cases (below)
-        is_incr_lst_ints = check_valid_lst(criteria, None, check_nat) and check_increasing(criteria)
-        if not is_incr_lst_ints:
-            # then check if it's one of the special cases
-            if not (self.position < 3 and criteria in CRITERIA_CARDS[self.position-1]):
-                raise CityPlanException(f"Given {criteria}, but city plan 'criteria' must be a list of \
-                    integers or one of the specified criteria cards.")
-        self._criteria = criteria
+    def criteria(self, criteria) -> None:
+        self._criteria = Criteria(criteria, self._position)
     
     @property
     def position(self) -> int:
@@ -68,7 +62,7 @@ class CityPlan():
         Returns the Dictionary representation of a CityPlan.
         '''
         dict_repr = {
-            "criteria": self._criteria,
+            "criteria": self._criteria.to_list_or_string(),
             "position": self._position,
             "score1": self._score1,
             "score2": self._score2
