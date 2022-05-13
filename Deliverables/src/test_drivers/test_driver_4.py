@@ -15,8 +15,6 @@ def main():
         valid = True
     except MoveException:
         valid = False
-    # move_validator.validate_move()
-    # valid = True
 
     print(json.dumps(valid))
 

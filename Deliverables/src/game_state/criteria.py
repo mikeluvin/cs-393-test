@@ -20,6 +20,10 @@ class Criteria():
                     integers or one of the specified criteria cards.")
         self._valid_criteria = criteria
 
+    @property
+    def valid_criteria(self):
+        return self._valid_criteria
+
     def is_satisfied(self, player_state: PlayerState, estates) -> bool:
         if self._is_incr_lst_ints:
             return self._is_num_criteria_satisfied(estates)

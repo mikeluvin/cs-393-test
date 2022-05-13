@@ -1,7 +1,7 @@
 from player_state import *
 from game_state import *
 from exception import MoveException
-from constants import POOL_LOCS
+from constants import POOL_LOCS, STREET_LENS, CriteriaCard
 from collections import defaultdict
 from helpers import is_eq_or_mono_incr
 
@@ -23,8 +23,9 @@ class MoveValidator():
         # special case for bis
         self._bis_houses = []
         # if new houses used in plan, validate them with the GameState
-        # holds: list of [row, col, House object]
-        self._in_plan = []
+        # holds: list of lists of [col, House object]
+        # i.e. self._in_plan[0] holds the in-plan for the first row of houses, etc
+        self._in_plan = [[], [], []]
         # check that landscaper card was used
         # holds row index of where park was built
         self._parks = None
@@ -52,7 +53,7 @@ class MoveValidator():
         '''
         Returns True if there was an update to a city plan.
         '''
-        return self._in_plan or self._city_plan_score
+        return any(self._in_plan) or self._city_plan_score
         
     def to_dict(self) -> dict:
         dict_repr = {
@@ -198,7 +199,7 @@ class MoveValidator():
         if h1.in_plan != h2.in_plan:
             if h1.in_plan:
                 raise MoveException(f"Cannot remove a house from a city plan.")
-            self._in_plan.append([i, j, h2])
+            self._in_plan[i].append([j, h2])
 
     def _validate_card_num(self) -> tuple:
         '''
@@ -292,25 +293,38 @@ class MoveValidator():
         '''
         estates = defaultdict(int)
         first_home = True
-        in_curr_estate = []
-        for row, col, h in self._in_plan:
-            if first_home:
-                # first home MUST have a fence on the left, if not, it's invalid.
-                if not h.fence_left:
-                    raise MoveException(f"City plans must be enclosed by fences.")
-                first_home = False
-            else:
-                # if not first home, then this home MUST be adjacent to the previous one
-                if row != in_curr_estate[-1][0] or col != in_curr_estate[-1][1] + 1:
-                    raise MoveException(f"Houses used in the same city plan estate must be adjacent.")
+        # if we're trying to claim the "end houses" city plan, then exclude them from 
+        # the loop (since they can't be double counted)
+        start, end = 0, STREET_LENS[0] - 1
+        cps_claimed_criteria = [self._game_st.city_plans[i].criteria.valid_criteria for i, _ in self._city_plan_score]
+        if CriteriaCard.END_HOUSES in cps_claimed_criteria:
+            start += 1
+            end -= 1
 
-            in_curr_estate.append((row, col))
+        for curr_row in self._in_plan: 
+            in_curr_estate = []
+            for j, h in curr_row:
+                if j < start or j > end:
+                    continue
 
-            if h.fence_right:
-                # then, we found an estate
-                estates[len(in_curr_estate)] += 1
-                in_curr_estate = []
-                first_home = True
+                if first_home:
+                    # first home MUST have a fence on the left, if not, it's invalid.
+                    if not h.fence_left:
+                        raise MoveException(f"City plans must be enclosed by fences.")
+                    first_home = False
+                else:
+                    # if not first home, then this home MUST be adjacent to the previous one
+                    if not in_curr_estate or j != in_curr_estate[-1] + 1:
+                        raise MoveException(f"Houses used in the same city plan estate must be adjacent.")
+
+                in_curr_estate.append(j)
+
+                if h.fence_right:
+                    # then, we found an estate
+                    estates[len(in_curr_estate)] += 1
+                    in_curr_estate = []
+                    first_home = True
+            end += 1
 
         return estates
                         
@@ -324,12 +338,6 @@ class MoveValidator():
         estates = self._find_new_estates()
         # find city plans that were potentially claimed
         for i, cp_score in self._city_plan_score:
-            # get city plan with "position" i+1
-            # cp_claimed = None
-            # for cp in self._game_st.city_plans:
-            #     if cp.position == i + 1:
-            #         cp_claimed = cp
-            #         break
             cp_claimed = self._game_st.city_plans[i]
 
             if self._game_st.city_plans_won[i]:
@@ -342,21 +350,5 @@ class MoveValidator():
             if not cp_claimed.criteria.is_satisfied(self._ps2, estates):
                 raise MoveException(f"Incorrectly attemped to claim city plan {cp_claimed}.")
 
-            # # loop through estate size values in criteria and see
-            # # if there's estates matching those sizes
-            # for estate_size in cp_claimed.criteria:
-            #     if estate_size in estates:
-            #         estates[estate_size] -= 1
-            #         if estates[estate_size] == 0:
-            #             del estates[estate_size]
-            #     else:
-            #         # then, the player tried claiming the points for 
-            #         # this city plan, but they don't have the correct estates
-            #         raise MoveException(f"Invalid claim of city plan with criteria {cp_claimed.criteria}.")
-
         return True
-        # at this point, all the estates should be used. If there's any left,
-        # it's invalid
-        # if len(estates) > 0:
-        #     raise MoveException(f"Marked more city plan estates than is allowed.")
 
