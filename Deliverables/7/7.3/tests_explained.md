@@ -8,3 +8,4 @@ test7: place two roundabouts
 test8: "all pools all parks one roundabout" city plan used
 test9: "7 temps" used going from 7 -> 8 temps
 test10: build roundabout and claim city plan
+two_cps: build a roundabout and use surveyor. Claim a regular city plan and the "all pools all parks one roundabout" city plan
