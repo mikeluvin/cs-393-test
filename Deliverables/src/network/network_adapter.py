@@ -2,6 +2,8 @@ import socket
 import json
 import sys
 
+from exception import PlayerConnectionException
+
 class NetworkAdapter():
     def __init__(self, sock: socket):
         self._sock = sock
@@ -13,6 +15,8 @@ class NetworkAdapter():
     def recv(self) -> str:
         while b"\n" not in self._data:
             self._data += self._sock.recv(8192)
+            if not self._data:
+                raise PlayerConnectionException()
 
         decoded_data_lst = self._data.decode("utf-8").split("\n", maxsplit=1)
         request = decoded_data_lst[0].strip()

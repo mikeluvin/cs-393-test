@@ -20,7 +20,12 @@ class NetworkPlayer(Player):
             "game-state": game_state.to_dict(), 
             "player-state": self._player_state.to_dict()
         })
-        new_ps = self._network.recv()
+        try:
+            new_ps = self._network.recv()
+        except PlayerConnectionException:
+            self._network.close()
+            return False
+
         try:
             return PlayerState(new_ps)
         # if player sends an invalid PlayerState, they cheated
@@ -36,6 +41,7 @@ class NetworkPlayer(Player):
         if not self._closed:
             self._network.send(scores)
             # wait for the ack
+            # ****
             # ** issue seems to be that we never receive the ack...
             # sys.stderr.write(f"waiting for ack from player\n")
             # self._network.recv()
