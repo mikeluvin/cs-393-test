@@ -7,10 +7,11 @@ from players import *
 from moves import MoveGenerator, MoveValidator
 from exception import MoveException
 from game_state import GameState, ConstructionCard, Effect
+import sys
 
 class GameServer():
-    def __init__(self, game_config: dict, cc_lst: list, cp_lst: list) -> None:
-        self._num_players = game_config["players"]
+    def __init__(self, game_config: dict, local_players: list, cc_lst: list, cp_lst: list) -> None:
+        self._num_network_players = game_config["players"]
         self._port = game_config["port"]
         self._cc_deck = ConstructionCardDeck(cc_lst)
         self._cp_deck = CityPlanDeck(cp_lst)
@@ -19,6 +20,7 @@ class GameServer():
         self._game_state = self._initialize_game_state()
         self._start_tcp_listener()
         self._connect_to_network_players()
+        self._add_local_players(local_players)
         self._play_game()
 
     def _start_tcp_listener(self):
@@ -26,16 +28,19 @@ class GameServer():
         self._sock.bind(('', self._port))
         self._sock.listen()
         self._network = NetworkAdapter(self._sock)
-        print(json.dumps("started"))
+        sys.stdout.write(json.dumps("started"))
+        sys.stdout.flush()
 
     def _connect_to_network_players(self):
-        while len(self._players) < self._num_players:
+        while len(self._players) < self._num_network_players:
             player_sock, addr = self._sock.accept()
-            player_name = self._network.recv()
-            self._players[player_name] = NetworkPlayer(player_sock, addr)
+            netwk_player = NetworkPlayer(player_sock, addr)
+            player_name = netwk_player.network.recv()
+            self._players[player_name] = netwk_player
 
-    def add_local_player(self, player_name: str, move_generator: MoveGenerator) -> None:
-        self._players[player_name] = LocalPlayer(move_generator)
+    def _add_local_players(self, local_players: list) -> None:
+        for player_name, move_generator in local_players:
+            self._players[player_name] = LocalPlayer(move_generator)
 
     def _initialize_game_state(self) -> GameState:
         curr_ccs = self._cc_deck.draw_new_cards()
@@ -50,8 +55,8 @@ class GameServer():
         return GameState(gs_dict)
 
     def _draw_new_construction_cards(self) -> None:
-        curr_ccs = [ConstructionCard(cc) for cc in self._cc_deck.draw_new_cards()]
-        prev_cc_effects = [Effect(eff) for eff in self._cc_deck.get_prev_card_effects()]
+        curr_ccs = self._cc_deck.draw_new_cards()
+        prev_cc_effects = self._cc_deck.get_prev_card_effects()
         self._game_state.ccards = curr_ccs
         self._game_state.effects = prev_cc_effects
 
@@ -65,9 +70,10 @@ class GameServer():
             self._play_move()
 
         scores = self._calculate_player_scores()
-        print(json.dumps(scores))
+        sys.stdout.write(json.dumps(scores))
+        sys.stdout.flush()
         self._send_final_scores({ "game-over": scores })
-        # self._network.close()
+        self._network.close()
         
     def _play_move(self):
         claimed_cps = set()
@@ -76,7 +82,7 @@ class GameServer():
             if not curr_player.player_state:
                 continue
 
-            new_ps = curr_player.get_next_move()
+            new_ps = curr_player.get_next_move(self._game_state)
             if new_ps:
                 try:
                     move_validator = MoveValidator(self._game_state, curr_player.player_state, new_ps)
@@ -109,15 +115,25 @@ class GameServer():
 
         return False
 
+    def _get_player_temps(self):
+        temps_lst = []
+        for curr_player in self._players.values():
+            if not curr_player.player_state:
+                continue
+            temps_lst.append(curr_player.player_state.temps)
+        return temps_lst
+
     def _calculate_player_scores(self) -> list:
+        temps_lst = self._get_player_temps()
         scores = []
         for player_name, curr_player in self._players.items():
-            scores.append([player_name, curr_player.get_score()])
+            scores.append([player_name, curr_player.get_score(temps_lst)])
 
         return scores
 
     def _send_final_scores(self, scores: list) -> None:
-        for curr_player in self._players.values():
+        for player_name, curr_player in self._players.items():
+            # sys.stderr.write(f"sending scores to player {player_name}\n")
             curr_player.send_final_scores(scores)
 
         

@@ -91,6 +91,10 @@ class PlayerState():
             raise PlayerStateException(f"Given {temps}, but temps must be an integer between 0 and 11.")
         self._temps = temps
     
+    @property
+    def roundabouts(self) -> int:
+        return sum([street.roundabout_count() for street in self._streets])
+
     def temps_score(self, temps_lst) -> int:
         if self._temps == 0:
             return 0
@@ -129,6 +133,7 @@ class PlayerState():
         pools_score = [0, 3, 6, 9, 13, 17, 21, 26, 31, 36]
         bis_score = [0, 1, 3, 6, 9, 12, 16, 20, 24, 28]
         refusal_score = [0, 0, 3, 5]
+        roundabout_score = [0, 3, 8]
         for street in self._streets:
             pools_count += street.pools_built()
             bis_count += street.bis_count()
@@ -149,6 +154,7 @@ class PlayerState():
         total_score += estates_total_score
         total_score -= bis_score[bis_count]
         total_score -= refusal_score[self._refusals]
+        total_score -= roundabout_score[self.roundabouts]
 
         return total_score
 

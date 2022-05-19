@@ -26,8 +26,8 @@ class Player():
     def close(self):
         pass
 
-    def send_final_scores(self, scores: list):
+    def send_final_scores(self, scores: dict):
         pass
 
-    def get_score(self):
-        return self._player_state.calculate_score() if self._player_state else False
+    def get_score(self, temps_lst: list):
+        return self._player_state.calculate_score(temps_lst) if self._player_state else False
