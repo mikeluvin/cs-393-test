@@ -45,3 +45,7 @@ class MoveException(Exception):
 class PlayerAdapterException(Exception):
     def __init__(self, message="Invalid network request."):
         super().__init__(message)
+
+class PlayerConnectionException(Exception):
+    def __init__(self, message="Network connection dropped by player."):
+        super().__init__(message)

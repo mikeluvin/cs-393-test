@@ -4,7 +4,7 @@ import sys
 from . import Player
 from game_state import GameState
 from player_state import PlayerState
-from exception import PlayerStateException
+from exception import PlayerStateException, PlayerConnectionException
 from network import NetworkAdapter
 
 class NetworkPlayer(Player):
@@ -12,6 +12,7 @@ class NetworkPlayer(Player):
         self._network = NetworkAdapter(sock)
         self._closed = False
         self._addr = addr
+        self.name = self._network.recv()
         super().__init__()
 
     def get_next_move(self, game_state: GameState):
@@ -32,17 +33,14 @@ class NetworkPlayer(Player):
             self._closed = True
 
     def send_final_scores(self, scores: dict):
-        self._network.send(scores)
-        # wait for the ack
-        # ** issue seems to be that we never receive the ack...
-        # sys.stderr.write(f"waiting for ack from player\n")
-        # self._network.recv()
-        # sys.stderr.write("received ack")
-        self.close()
-
-    @property
-    def network(self) -> NetworkAdapter:
-        return self._network
+        if not self._closed:
+            self._network.send(scores)
+            # wait for the ack
+            # ** issue seems to be that we never receive the ack...
+            # sys.stderr.write(f"waiting for ack from player\n")
+            # self._network.recv()
+            # sys.stderr.write("received ack")
+            self.close()
 
 
     

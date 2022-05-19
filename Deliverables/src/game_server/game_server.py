@@ -35,7 +35,7 @@ class GameServer():
         while len(self._players) < self._num_network_players:
             player_sock, addr = self._sock.accept()
             netwk_player = NetworkPlayer(player_sock, addr)
-            player_name = netwk_player.network.recv()
+            player_name = netwk_player.name
             self._players[player_name] = netwk_player
 
     def _add_local_players(self, local_players: list) -> None:

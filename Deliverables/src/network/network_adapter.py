@@ -8,7 +8,7 @@ class NetworkAdapter():
         self._data = b""
 
     def send(self, msg: str):
-        self._sock.send(f"{ json.dumps(msg) }\n".encode())
+        self._sock.sendall(f"{ json.dumps(msg) }\n".encode())
 
     def recv(self) -> str:
         while b"\n" not in self._data:
