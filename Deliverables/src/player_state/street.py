@@ -207,7 +207,7 @@ class Street():
         in_estate = False
         size_counter = 0
         for home in self._homes:
-            if home.num != "blank":
+            if home.num not in ["blank", "roundabout"]:
                 if home._fence_left:
                     in_estate = True
                 if in_estate:
