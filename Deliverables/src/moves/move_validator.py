@@ -54,6 +54,9 @@ class MoveValidator():
         Returns True if there was an update to a city plan.
         '''
         return any(self._in_plan) or self._city_plan_score
+
+    def new_city_plans(self):
+        return self._city_plan_score
         
     def to_dict(self) -> dict:
         dict_repr = {

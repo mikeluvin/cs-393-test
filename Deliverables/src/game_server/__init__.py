@@ -1,3 +1,3 @@
-from .card_deck import CardDeck
-from .cp_deck import CPDeck
+from .cc_deck import ConstructionCardDeck
+from .cp_deck import CityPlanDeck
 from .game_server import GameServer

@@ -232,6 +232,9 @@ class Street():
     def roundabout_count(self) -> int:
         return [h.num == "roundabout" for h in self._homes].count(True)
 
+    def is_full(self) -> bool:
+        return all([h.num != "blank" for h in self._homes])
+
     def to_dict(self) -> dict:
         # convert the first home back to the initial representation
         first_home = self._homes[0].to_list()

@@ -1,11 +1,13 @@
 import json
+
 from helpers import *
 from exception import PlayerStateException
 from . import Street
 from collections import defaultdict
+from constants import EMPTY_PS, MAX_REFUSALS
 
 class PlayerState():
-    def __init__(self, ps_dict: dict) -> None:
+    def __init__(self, ps_dict: dict=EMPTY_PS) -> None:
         # max number of cross-outs for each agent
         self._agent_maxes = [1, 2, 3, 4, 4, 4]
         ps_keys = set(["agents", "city-plan-score", "refusals", "streets", "temps"])
@@ -149,6 +151,11 @@ class PlayerState():
         total_score -= refusal_score[self._refusals]
 
         return total_score
+
+    def is_game_over(self) -> bool:
+        return (self.refusals == MAX_REFUSALS or 
+            all([s.is_full() for s in self._streets]) or 
+            all([score != "blank" for score in self._cp_scores]))
 
         
     def to_dict(self) -> dict:
