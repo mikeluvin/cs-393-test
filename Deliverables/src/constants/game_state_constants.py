@@ -1,6 +1,8 @@
 from enum import Enum
 import json
 
+NUM_CCS = 3
+NUM_CPS = 3
 # valid city plan positions are 1, 2, or 3
 VALID_POSNS = set(range(1, 4))
 
