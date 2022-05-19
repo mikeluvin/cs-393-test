@@ -2,7 +2,7 @@ import json
 from exception import *
 from helpers import *
 from . import Criteria
-from constants import VALID_CRITERIA_CARDS, VALID_POSNS
+from constants import VALID_POSNS
 
 class CityPlan():
     def __init__(self, cp_dict: dict) -> None:
