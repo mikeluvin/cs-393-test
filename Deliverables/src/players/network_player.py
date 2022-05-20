@@ -1,5 +1,4 @@
 import socket
-import sys
 
 from . import Player
 from game_state import GameState
@@ -23,7 +22,7 @@ class NetworkPlayer(Player):
         try:
             new_ps = self._network.recv()
         except PlayerConnectionException:
-            self._network.close()
+            self.close()
             return False
 
         try:
@@ -41,11 +40,12 @@ class NetworkPlayer(Player):
         if not self._closed:
             self._network.send(scores)
             # wait for the ack
-            # ****
-            # ** issue seems to be that we never receive the ack...
-            # sys.stderr.write(f"waiting for ack from player\n")
-            # self._network.recv()
-            # sys.stderr.write("received ack")
+            try:
+                self._network.recv()
+            except PlayerConnectionException:
+                # if the player disconnected, we're closing anyways
+                pass
+
             self.close()
 
 

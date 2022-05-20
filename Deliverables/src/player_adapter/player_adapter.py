@@ -1,5 +1,5 @@
 import socket
-import json
+
 from exception import PlayerAdapterException
 from game_state import GameState
 from player_state import PlayerState
@@ -14,7 +14,7 @@ class PlayerAdapter():
         self._host = network_config["host"]
         self._port = network_config["port"]
         self._Player = Player
-        self._data = b""
+
         self._create_tcp_connection()
         self._play_game()
 

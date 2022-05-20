@@ -77,7 +77,7 @@ class GameServer():
         
     def _play_move(self):
         claimed_cps = set()
-        for player_name, curr_player in self._players.items():
+        for curr_player in self._players.values():
             # player_state is False if they cheated, so skip them
             if not curr_player.player_state:
                 continue
@@ -132,8 +132,7 @@ class GameServer():
         return scores
 
     def _send_final_scores(self, scores: list) -> None:
-        for player_name, curr_player in self._players.items():
-            # sys.stderr.write(f"sending scores to player {player_name}\n")
+        for curr_player in self._players.values():
             curr_player.send_final_scores(scores)
 
         
