@@ -19,9 +19,9 @@ class NetworkAdapter():
 
         decoded_data_lst = self._data.decode("utf-8").split("\n", maxsplit=1)
         request = decoded_data_lst[0].strip()
-        # if we somehow have >2 valid json objects, join the remaining with a "\n"
+        # if we somehow have >2 valid json objects, keep the remaining
         # so we can access them in the future
-        self._data = "\n".join(decoded_data_lst[1:]).encode("utf-8")
+        self._data = decoded_data_lst[1].encode("utf-8")
         
         return json.loads(request)
 
