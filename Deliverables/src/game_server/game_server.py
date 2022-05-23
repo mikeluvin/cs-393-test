@@ -1,5 +1,6 @@
 import socket
 import json
+import sys
 
 from . import ConstructionCardDeck, CityPlanDeck
 from network import *
@@ -7,7 +8,6 @@ from players import *
 from moves import MoveValidator
 from exception import MoveException
 from game_state import GameState
-import sys
 
 class GameServer():
     def __init__(self, game_config: dict, local_players: list, cc_lst: list, cp_lst: list) -> None:
@@ -63,9 +63,7 @@ class GameServer():
             self._play_move()
 
         scores = self._calculate_player_scores()
-        sys.stdout.write(json.dumps(scores))
-        sys.stdout.flush()
-        self._send_final_scores({ "game-over": scores })
+        self._send_final_scores(scores)
         self._network.close()
         
     def _play_move(self):
@@ -114,6 +112,7 @@ class GameServer():
             if not curr_player.player_state:
                 continue
             temps_lst.append(curr_player.player_state.temps)
+
         return temps_lst
 
     def _calculate_player_scores(self) -> list:
@@ -125,7 +124,10 @@ class GameServer():
         return scores
 
     def _send_final_scores(self, scores: list) -> None:
+        sys.stdout.write(json.dumps(scores))
+        sys.stdout.flush()
+        scores_dict = { "game-over": scores }
         for curr_player in self._players:
-            curr_player.send_final_scores(scores)
+            curr_player.send_final_scores(scores_dict)
 
         
