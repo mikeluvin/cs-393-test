@@ -2,8 +2,13 @@ from game_state import GameState
 from player_state import PlayerState
 
 class Player():
-    def __init__(self) -> None:
+    def __init__(self, name:str) -> None:
         self._player_state = PlayerState()
+        self._name = name
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def player_state(self) -> PlayerState:

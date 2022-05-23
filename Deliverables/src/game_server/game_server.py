@@ -15,8 +15,8 @@ class GameServer():
         self._port = game_config["port"]
         self._cc_deck = ConstructionCardDeck(cc_lst)
         self._cp_deck = CityPlanDeck(cp_lst)
-        # dictionary of players: player names -> Player objects
-        self._players = dict()
+        # list of Player objects
+        self._players = []
         self._game_state = self._initialize_game_state()
         self._start_tcp_listener()
         self._connect_to_network_players()
@@ -34,13 +34,11 @@ class GameServer():
     def _connect_to_network_players(self):
         while len(self._players) < self._num_network_players:
             player_sock, addr = self._sock.accept()
-            netwk_player = NetworkPlayer(player_sock, addr)
-            player_name = netwk_player.name
-            self._players[player_name] = netwk_player
+            self._players.append(NetworkPlayer(player_sock, addr))
 
     def _add_local_players(self, local_players: list) -> None:
         for player_name, move_generator in local_players:
-            self._players[player_name] = LocalPlayer(move_generator)
+            self._players.append(LocalPlayer(player_name, move_generator))
 
     def _initialize_game_state(self) -> GameState:
         curr_ccs = self._cc_deck.draw_new_cards()
@@ -77,7 +75,7 @@ class GameServer():
         
     def _play_move(self):
         claimed_cps = set()
-        for curr_player in self._players.values():
+        for curr_player in self._players:
             # player_state is False if they cheated, so skip them
             if not curr_player.player_state:
                 continue
@@ -107,7 +105,7 @@ class GameServer():
         self._draw_new_construction_cards()
 
     def _is_game_over(self) -> bool:
-        for curr_player in self._players.values():
+        for curr_player in self._players:
             if not curr_player.player_state:
                 continue
             if curr_player.player_state.is_game_over():
@@ -117,7 +115,7 @@ class GameServer():
 
     def _get_player_temps(self):
         temps_lst = []
-        for curr_player in self._players.values():
+        for curr_player in self._players:
             if not curr_player.player_state:
                 continue
             temps_lst.append(curr_player.player_state.temps)
@@ -126,13 +124,13 @@ class GameServer():
     def _calculate_player_scores(self) -> list:
         temps_lst = self._get_player_temps()
         scores = []
-        for player_name, curr_player in self._players.items():
-            scores.append([player_name, curr_player.get_score(temps_lst)])
+        for curr_player in self._players:
+            scores.append([curr_player.name, curr_player.get_score(temps_lst)])
 
         return scores
 
     def _send_final_scores(self, scores: list) -> None:
-        for curr_player in self._players.values():
+        for curr_player in self._players:
             curr_player.send_final_scores(scores)
 
         

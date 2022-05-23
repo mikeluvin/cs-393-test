@@ -11,8 +11,8 @@ class NetworkPlayer(Player):
         self._network = NetworkAdapter(sock)
         self._closed = False
         self._addr = addr
-        self.name = self._network.recv()
-        super().__init__()
+        name = self._network.recv()
+        super().__init__(name)
 
     def get_next_move(self, game_state: GameState):
         self._network.send({
