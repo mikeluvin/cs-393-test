@@ -58,12 +58,7 @@ class GameServer():
         self._game_state.ccards = curr_ccs
         self._game_state.effects = prev_cc_effects
 
-    # TODO: 
-    # - ***how to handle mutliple connections without closing them???***
-    # - determine if a player has closed the connection on their end
-
     def _play_game(self):
-        # while game isn't over, play a move
         while not self._is_game_over():
             self._play_move()
 
