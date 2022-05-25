@@ -5,9 +5,8 @@ import sys
 from . import ConstructionCardDeck, CityPlanDeck
 from network import *
 from players import *
-from moves import MoveValidator
-from exception import MoveException
 from game_state import GameState
+from player_state import PlayerState
 
 class GameServer():
     def __init__(self, game_config: dict, local_players: list, cc_lst: list, cp_lst: list) -> None:
@@ -60,42 +59,40 @@ class GameServer():
 
     def _play_game(self):
         while not self._is_game_over():
-            self._play_move()
+            self._all_players_play_move()
 
         scores = self._calculate_player_scores()
         self._send_final_scores(scores)
         self._network.close()
         
-    def _play_move(self):
+    def _all_players_play_move(self):
         claimed_cps = set()
         for curr_player in self._players:
-            # player_state is False if they cheated, so skip them
-            if not curr_player.player_state:
+            if curr_player.cheated:
                 continue
 
-            new_ps = curr_player.get_next_move(self._game_state)
-            if new_ps:
-                try:
-                    move_validator = MoveValidator(self._game_state, curr_player.player_state, new_ps)
-                    move_validator.validate_move()
-                except MoveException:
-                    new_ps = False
+            prev_ps = curr_player.player_state
+            curr_player.play_next_move(self._game_state)
+            if curr_player.cheated:
+                continue
 
-            # if the new PlayerState is False, then the player cheated
-            if not new_ps:
-                curr_player.close()
-            else:
-                # find newly claimed city plans
-                for cp_idx, _ in move_validator.new_city_plans():
-                    claimed_cps.add(cp_idx)
-                
-            curr_player.player_state = new_ps
-
-        # updated claimed city plans in GameState
+            self._find_new_city_plan_scores(claimed_cps, prev_ps, curr_player.player_state)
+            
+        # update claimed city plans in GameState
         for i in claimed_cps:
             self._game_state.city_plans_won[i] = True
 
         self._draw_new_construction_cards()
+
+    def _find_new_city_plan_scores(self, claimed_cps: set, prev_ps: PlayerState, new_ps: PlayerState):
+        '''
+        Find newly claimed city plan scores from prev_ps to new_ps and add 
+        their indices to claimed_cps set.
+        '''
+        for cp_idx, score in enumerate(new_ps.city_plan_score):
+            prev_cp_score = prev_ps.city_plan_score[cp_idx]
+            if prev_cp_score == "blank" and score != "blank":
+                claimed_cps.add(cp_idx)
 
     def _is_game_over(self) -> bool:
         for curr_player in self._players:

@@ -7,5 +7,5 @@ class LocalPlayer(Player):
         self._MoveGenerator = move_generator
         super().__init__(name)
 
-    def get_next_move(self, game_state: GameState):
+    def _get_next_player_state(self, game_state: GameState):
         return self._MoveGenerator(game_state, self._player_state)

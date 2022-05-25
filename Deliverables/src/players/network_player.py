@@ -14,7 +14,7 @@ class NetworkPlayer(Player):
         name = self._network.recv()
         super().__init__(name)
 
-    def get_next_move(self, game_state: GameState):
+    def _get_next_player_state(self, game_state: GameState):
         self._network.send({
             "game-state": game_state.to_dict(), 
             "player-state": self._player_state.to_dict()
@@ -22,7 +22,6 @@ class NetworkPlayer(Player):
         try:
             new_ps = self._network.recv()
         except PlayerConnectionException:
-            self.close()
             return False
 
         try:
