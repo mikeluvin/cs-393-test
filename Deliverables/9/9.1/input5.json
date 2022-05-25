@@ -1,0 +1,93 @@
+[
+    {
+      "city-plans": [
+        {
+          "criteria": [1,1,1,1,1,1],
+          "position": 3,
+          "score1": 8,
+          "score2": 4
+        },
+        {
+          "criteria": [ "all houses", 0 ],
+          "position": 1,
+          "score1": 11,
+          "score2": 6
+        },
+        {
+          "criteria": "two streets all parks",
+          "position": 2,
+          "score1": 12,
+          "score2": 7
+        }
+      ],
+      "city-plans-won": [false,false,false],
+      "construction-cards": [
+        [3,"bis"],
+        [2,"bis"],
+        [10,"bis"]
+      ],
+      "effects": ["surveyor","bis","temp"]
+    },
+    {
+      "agents": [0,0,0,0,0,0],
+      "city-plan-score": ["blank","blank","blank"],
+      "refusals": 0,
+      "streets": [
+        {
+          "homes": [
+            1,
+            false,
+            [false,2,false],
+            [false,3,false],
+            [false,4,false],
+            [false,5,false],
+            [false,6,false],
+            [false,7,false],
+            [false,8,false],
+            [false,9,false],
+            [false,"blank",false]
+          ],
+          "parks": 0,
+          "pools": [false,false,false]
+        },
+        {
+          "homes": [
+            "blank",
+            false,
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false]
+          ],
+          "parks": 0,
+          "pools": [false,false,false]
+        },
+        {
+          "homes": [
+            "blank",
+            false,
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false],
+            [false,"blank",false]
+          ],
+          "parks": 0,
+          "pools": [false,false,false]
+        }
+      ],
+      "temps": 6
+    }
+  ]
