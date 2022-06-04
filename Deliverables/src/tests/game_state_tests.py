@@ -52,7 +52,7 @@ class TestCityPlan(unittest.TestCase):
         }
         for criteria in bad_criteria:
             cp_dict["criteria"] = criteria
-            with self.assertRaises(CityPlanException):
+            with self.assertRaises(CriteriaException):
                 CityPlan(cp_dict)
 
     def test_valid_special_criteria2(self):
@@ -94,7 +94,7 @@ class TestCityPlan(unittest.TestCase):
         }
         for criteria in bad_criteria:
             cp_dict["criteria"] = criteria
-            with self.assertRaises(CityPlanException):
+            with self.assertRaises(CriteriaException):
                 CityPlan(cp_dict)
     
     def test_invalid_special_criteria_in_posn3(self):
@@ -119,7 +119,7 @@ class TestCityPlan(unittest.TestCase):
         }
         for criteria in bad_criteria:
             cp_dict["criteria"] = criteria
-            with self.assertRaises(CityPlanException):
+            with self.assertRaises(CriteriaException):
                 CityPlan(cp_dict)
 
 
