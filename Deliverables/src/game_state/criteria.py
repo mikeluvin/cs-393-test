@@ -1,11 +1,12 @@
 import json
+from typing import *
 from player_state import PlayerState, Street
 from exception import CriteriaException
 from helpers import * 
 from constants import PARK_MAXES, VALID_CRITERIA_CARDS, CriteriaCard
 
 class Criteria():
-    def __init__(self, criteria, position) -> None:
+    def __init__(self, criteria: Union[List, str], position: int) -> None:
         # criteria must be a list of naturals, or one of the special cases (below)
         self._is_incr_lst_ints = check_valid_lst(criteria, None, check_nat) and check_increasing(criteria)
         if not self._is_incr_lst_ints:
@@ -21,7 +22,7 @@ class Criteria():
         self._valid_criteria = criteria
 
     @property
-    def valid_criteria(self):
+    def valid_criteria(self) -> Union[List, str]:
         return self._valid_criteria
 
     def is_satisfied(self, player_state: PlayerState, estates) -> bool:
@@ -67,7 +68,7 @@ class Criteria():
     def _is_all_houses_satisfied(self, street: Street) -> bool:
         return all([type(h.num) == int and h.in_plan for h in street.homes])
 
-    def _is_end_houses_satisfied(self, streets) -> bool:
+    def _is_end_houses_satisfied(self, streets: List[Street]) -> bool:
         for street in streets:
             first_home, last_home = street.homes[0], street.homes[-1]
             if not (type(first_home.num) == int and first_home.in_plan 
@@ -76,22 +77,22 @@ class Criteria():
 
         return True
 
-    def _is_7_temps_satisfied(self, temps) -> bool:
+    def _is_7_temps_satisfied(self, temps: int) -> bool:
         return temps >= 7
 
-    def _is_5_bis_satisfied(self, streets) -> bool:
+    def _is_5_bis_satisfied(self, streets: List[Street]) -> bool:
         return any([s.bis_count() >= 5 for s in streets])
 
-    def _is_two_streets_all_parks_satisfied(self, streets):
+    def _is_two_streets_all_parks_satisfied(self, streets: List[Street]):
         return [s.parks == PARK_MAXES[i] for i, s in enumerate(streets)].count(True) >= 2
 
-    def _is_two_streets_all_pools_satisfied(self, streets):
+    def _is_two_streets_all_pools_satisfied(self, streets: List[Street]):
         return [all(s.pools) for s in streets].count(True) >= 2
 
     def _is_all_pools_all_parks_satisfied(self, street: Street, st_idx: int):
         return all(street.pools) and street.parks == PARK_MAXES[st_idx]
 
-    def _is_all_pools_all_parks_one_roundabout_satisfied(self, streets):
+    def _is_all_pools_all_parks_one_roundabout_satisfied(self, streets: List[Street]):
         return any([self._is_all_pools_all_parks_satisfied(s, i) and s.roundabout_count() > 0 for i, s in enumerate(streets)])
 
     def to_list_or_string(self):
