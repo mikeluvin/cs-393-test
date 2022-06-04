@@ -3,14 +3,14 @@ import sys
 from game_state import GameState
 from player_state import PlayerState
 from . import parse_stdin
-from moves import MoveGenerator
+from moves import SimpleMoveGenerator
 
 def main():
     input_json = parse_stdin()
     if sys.argv[1] == "generate":
         game_state = GameState(input_json[0][0])
         player_state = PlayerState(input_json[0][1])
-        move_generator = MoveGenerator(game_state, player_state)
+        move_generator = SimpleMoveGenerator(game_state, player_state)
         new_player_st = move_generator.generate_move()
         sys.stdout.write(json.dumps(new_player_st.to_dict()))
     elif sys.argv[1] == "score":

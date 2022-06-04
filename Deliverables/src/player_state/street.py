@@ -186,6 +186,23 @@ class Street():
         3. parks is <= the number of non-bis houses filled on this street
         '''
         return check_nat(parks) and parks <= PARK_MAXES[self._idx] and parks <= non_bis_ct
+
+    def get_possible_home_locations(self, new_num: int):
+        locations = []
+        for i, curr_home in enumerate(self._homes):
+            if curr_home.num != "blank":
+                continue
+            
+            try:
+                self.try_place_new_home(i, new_num)
+            except:
+                pass
+            else:
+                locations.append(i)
+            finally:
+                curr_home.num = "blank"
+
+        return locations
     
     def try_place_new_home(self, home_idx: int, new_num) -> None:
         '''
