@@ -1,6 +1,6 @@
 import json
 from player_state import PlayerState, Street
-from exception import CriteriaException, MoveException
+from exception import CriteriaException
 from helpers import * 
 from constants import PARK_MAXES, VALID_CRITERIA_CARDS, CriteriaCard
 

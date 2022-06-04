@@ -1,11 +1,13 @@
 import json
+from typing import *
 from helpers import *
-from exception import HomeException
+from exception import HomeException, my_assert
 
 class Home():
-    def __init__(self, home_lst: list) -> None:
-        if type(home_lst) != list or len(home_lst) != 4:
-            raise HomeException(f"A home must be a list containing four elements.")
+    def __init__(self, home_lst: List) -> None:
+        my_assert(type(home_lst) == list and len(home_lst) == 4,
+            HomeException,
+            f"A home must be a list containing four elements.")
         
         fence_left, house, in_plan, fence_right = home_lst
         self.fence_left = fence_left
@@ -13,7 +15,7 @@ class Home():
         self.house = house
         self.in_plan = in_plan
 
-    def _validate_house(self, house):
+    def _validate_house(self, house: Union[int, str, List]) -> Tuple[bool, Union[int, str], bool]:
         '''
         Returns valid_house, num, and bis.
         - valid_house is True if house satisfies one the following:
@@ -53,9 +55,10 @@ class Home():
         return self._fence_left
 
     @fence_left.setter
-    def fence_left(self, fence) -> None:
-        if type(fence) != bool:
-            raise HomeException(f"Given {fence}, but fence-or-not must be a boolean.")
+    def fence_left(self, fence: bool) -> None:
+        my_assert(type(fence) == bool,
+            HomeException,
+            f"Given {fence}, but fence-or-not must be a boolean.")
         self._fence_left = fence
 
     @property
@@ -63,13 +66,14 @@ class Home():
         return self._fence_right
 
     @fence_right.setter
-    def fence_right(self, fence) -> None:
-        if type(fence) != bool:
-            raise HomeException(f"Given {fence}, but fence-or-not must be a boolean.")
+    def fence_right(self, fence: bool) -> None:
+        my_assert(type(fence) == bool,
+            HomeException,
+            f"Given {fence}, but fence-or-not must be a boolean.")
         self._fence_right = fence
 
     @property
-    def house(self):
+    def house(self) -> Union[int, str, List]:
         '''
         Return the house, which is one of 
         1. natural, 0-17
@@ -80,25 +84,26 @@ class Home():
         return self._num if not self._is_bis else [self._num, "bis"]
 
     @house.setter
-    def house(self, house):
+    def house(self, house: Union[int, str, List]):
         valid_house, num, bis = self._validate_house(house)
-        if not valid_house:
-            raise HomeException(f"Given {house}, but house must be one of:\n1. natural, 0-17 \n2. 'blank'\n3. [natural, 'bis']\n4. 'roundabout' (with fences on both sides)")
+        my_assert(valid_house,
+            HomeException,
+            f"Given {house}, but house must be one of:\n1. natural, 0-17 \n2. 'blank'\n3. [natural, 'bis']\n4. 'roundabout' (with fences on both sides)")
         self.num, self.is_bis = num, bis
 
     @property
-    def num(self):
+    def num(self) -> Union[int, str]:
         '''
-        Return the house number; an integer 0 - 17, or "blank".
+        Return the house number; an integer 0 - 17, "blank", or "roundabout".
         '''
         return self._num
 
     @num.setter
-    def num(self, num):
-        if (check_nat(num) and num <= 17) or num in ["blank", "roundabout"]:
-            self._num = num
-        else:
-            raise HomeException(f"Given {num}, but house must either:\n1. natural, 0-17\n2. 'blank'.")
+    def num(self, num: Union[int, str]):
+        my_assert((check_nat(num) and num <= 17) or num in ["blank", "roundabout"],
+            HomeException,
+            f"Given {num}, but house must either:\n1. natural, 0-17\n2. 'blank'\n3. 'roundabout'.")
+        self._num = num
 
     @property
     def is_bis(self) -> bool:
@@ -109,8 +114,9 @@ class Home():
 
     @is_bis.setter
     def is_bis(self, is_bis: bool) -> None:
-        if type(is_bis) != bool:
-            raise HomeException(f"Given {is_bis}, but bis must be a boolean.")
+        my_assert(type(is_bis) == bool,
+            HomeException,
+            f"Given {is_bis}, but bis must be a boolean.")
         self._is_bis = is_bis
 
     @property
@@ -122,11 +128,12 @@ class Home():
 
     @in_plan.setter
     def in_plan(self, in_plan) -> None:
-        if not self._validate_used_ip(in_plan):
-            raise HomeException(f"Given {in_plan}, but used-in-plan must be a boolean.")
+        my_assert(self._validate_used_ip(in_plan),
+            HomeException,
+            f"Given {in_plan}, but used-in-plan must be a boolean.")
         self._in_plan = in_plan
 
-    def to_list(self) -> list:
+    def to_list(self) -> List:
         '''
         Returns the list representation of a home.
         '''

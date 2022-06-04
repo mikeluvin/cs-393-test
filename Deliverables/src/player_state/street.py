@@ -1,50 +1,48 @@
 import json
+from copy import deepcopy
+from typing import *
 from helpers import *
-from exception import StreetException
+from exception import StreetException, my_assert
 from . import Home
-from constants import PARK_MAXES, POOL_LOCS
+from constants import PARK_MAXES, POOL_LOCS, STREET_LENS
 from collections import defaultdict
 
 class Street():
-    def __init__(self, st_dict: dict, st_idx: int) -> None:
+    def __init__(self, st_dict: Dict, st_idx: int) -> None:
         # index of this street
         self._idx = st_idx
         st_keys = set(["homes", "parks", "pools"])
-        if type(st_dict) != dict or set(st_dict.keys()) != st_keys:
-            raise StreetException(f"A street must be a dictionary containing only these keys: {st_keys}")
+        my_assert(type(st_dict) == dict and set(st_dict.keys()) == st_keys,
+            StreetException,
+            f"A street must be a dictionary containing only these keys: {st_keys}"
+        )
 
         homes, parks, pools = st_dict["homes"], st_dict["parks"], st_dict["pools"]
         self.pools = pools
         self.homes = homes
-        # validate homes: strictly increasing (except for bis)  DONE
-        # bis must be the same number as an adjacent house  DONE
-        # house #s must be between 0 and 17     DONE
-        # bis cannot have a pool    DONE
-        # bis can't be separated from its duplicate by a fence  DONE
         self.parks = parks
-        # need to check that # of parks is <= # of non-bis houses on this street    DONE
-        # need to check that a house has a number to be used in a housing estate plan   DONE (inside Home class)
-        # need to check that # of pools <= # houses in row  DONE
 
     @property 
-    def homes(self):
+    def homes(self) -> List[Home]:
         return self._homes
 
     @homes.setter
-    def homes(self, homes: list) -> None:
-        if not self._validate_homes(homes):
-            raise StreetException(f"homes for row {self._idx+1} must be a list with {10 + self._idx} homes.")
+    def homes(self, homes: List) -> None:
+        my_assert(self._validate_homes(homes),
+            StreetException,
+            f"homes for row {self._idx} must be a list with {STREET_LENS[self._idx]} homes.")
         self._build_homes(homes)
         self._check_homes_rule_violations()
 
     @property
-    def pools(self):
+    def pools(self) -> List[bool]:
         return self._pools
 
     @pools.setter
-    def pools(self, pools: list) -> None:
-        if not check_valid_lst(pools, 3, lambda x: type(x) == bool):
-            raise StreetException(f"Given {pools}, but pools must be a list of 3 boolean values")
+    def pools(self, pools: List[bool]) -> None:
+        my_assert(check_valid_lst(pools, 3, lambda x: type(x) == bool),
+            StreetException,
+            f"Given {pools}, but pools must be a list of 3 boolean values")
         self._pools = pools
 
     @property
@@ -52,43 +50,44 @@ class Street():
         return self._parks
 
     @parks.setter
-    def parks(self, parks: list) -> None:
+    def parks(self, parks: int) -> None:
         # count number of non-bis houses
         non_bis_ct = [type(h.num) == int and not h.is_bis for h in self._homes].count(True)
-        if not self._validate_parks(parks, non_bis_ct):
-            raise StreetException(f"Given {parks}, but parks must be a natural no greater than {min(non_bis_ct, PARK_MAXES[self._idx])}.")
+        my_assert(self._validate_parks(parks, non_bis_ct),
+            StreetException,
+            f"Given {parks}, but parks must be a natural no greater than {min(non_bis_ct, PARK_MAXES[self._idx])}.")
         self._parks = parks
 
-    def _build_homes(self, homes: list) -> None:
+    def _build_homes(self, homes: List) -> None:
         '''
         Initialize a list of our internal representation of homes, the Home class.
-        NOTE: we represent the first home just like the rest, as a list of three fields.
-        The "fence-or-not" flag is always False for it.
+        NOTE: we represent the first home just like the rest, as a list of four fields.
+        The "fence-or-not" flag is always True for it.
         '''
+        homes_cpy = deepcopy(homes)
         home_lst = []
         curr_home = [True]
-        for i in range(len(homes)):
+        for i in range(len(homes_cpy)):
             if i == 0:
-                curr_home.append(homes[i])
+                curr_home.append(homes_cpy[i])
                 continue
             elif i == 1:
-                curr_home.append(homes[i])
+                curr_home.append(homes_cpy[i])
                 # add on the left fence of the next house
-                curr_home.append(homes[i+1][0])
-            elif i == len(homes) - 1:
-                # making a copy so we don't modify the input json (for testing purposes)
-                curr_home = homes[i].copy()
+                curr_home.append(homes_cpy[i+1][0])
+            elif i == len(homes_cpy) - 1:
+                curr_home = homes_cpy[i]
                 curr_home.append(True)
             else:
-                curr_home = homes[i].copy()
-                curr_home.append(homes[i+1][0])
+                curr_home = homes_cpy[i]
+                curr_home.append(homes_cpy[i+1][0])
 
             home_lst.append(curr_home)
 
         self._homes = [Home(home) for home in home_lst]       
             
 
-    def _validate_homes(self, homes: list) -> bool:
+    def _validate_homes(self, homes: List) -> bool:
         '''
         Returns True if homes is the correct length and formatted as
         [ house, used-in-plan, [ fence-or-not, house, used-in-plan ], ... ].
@@ -204,7 +203,7 @@ class Street():
 
         return locations
     
-    def try_place_new_home(self, home_idx: int, new_num) -> None:
+    def try_place_new_home(self, home_idx: int, new_num: Union[int, str, List]) -> None:
         '''
         Place a new home with new_num at index home_idx and validate that it doesn't
         break any rules.
@@ -219,7 +218,7 @@ class Street():
     def pools_built(self) -> int:
         return self._pools.count(True)
     
-    def estates_dict(self) -> dict:
+    def estates_dict(self) -> DefaultDict[int, int]:
         ret_dict = defaultdict(int)
         in_estate = False
         size_counter = 0

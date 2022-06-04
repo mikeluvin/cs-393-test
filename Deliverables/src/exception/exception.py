@@ -1,3 +1,13 @@
+from typing import *
+
+def my_assert(to_assert: bool, Exn: Exception, message: str) -> None:
+    '''
+    Asserts that to_assert is True, raises Exception Exn otherwise.
+    '''
+    if not to_assert:
+        raise Exn(message)
+
+
 class PlayerStateException(Exception):
     '''
     Base class for all exceptions related to the PlayerState.
@@ -33,7 +43,7 @@ class ConstructionCardException(GameStateException):
     def __init__(self, message="Invalid construction card."):
         super().__init__(message)
 
-class CriteriaException(GameStateException):
+class CriteriaException(CityPlanException):
     def __init__(self, message="Invalid criteria."):
         super().__init__(message)
 

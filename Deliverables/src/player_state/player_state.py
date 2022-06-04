@@ -1,18 +1,17 @@
 import json
-
+from typing import *
 from helpers import *
-from exception import PlayerStateException
+from exception import PlayerStateException, my_assert
 from . import Street
 from collections import defaultdict
-from constants import EMPTY_PS, MAX_REFUSALS
+from constants import EMPTY_PS, MAX_REFUSALS, AGENT_MAXES, MAX_TEMPS, TEMP_SCORES
 
 class PlayerState():
-    def __init__(self, ps_dict: dict=EMPTY_PS) -> None:
-        # max number of cross-outs for each agent
-        self._agent_maxes = [1, 2, 3, 4, 4, 4]
+    def __init__(self, ps_dict: Dict=EMPTY_PS) -> None:
         ps_keys = set(["agents", "city-plan-score", "refusals", "streets", "temps"])
-        if type(ps_dict) != dict or set(ps_dict.keys()) != ps_keys:
-            raise PlayerStateException(f"A player-state must be a dictionary containing only these keys: {ps_keys}")
+        my_assert(type(ps_dict) == dict and set(ps_dict.keys()) == ps_keys,
+            PlayerStateException,
+            f"A player-state must be a dictionary containing only these keys: {ps_keys}")
 
         agents, cp_scores, refusals = ps_dict["agents"], ps_dict["city-plan-score"], ps_dict["refusals"]
         streets, temps = ps_dict["streets"], ps_dict["temps"]
@@ -23,25 +22,26 @@ class PlayerState():
         self.streets = streets
         self.temps = temps
 
-    def _validate_agents(self, agents: list) -> bool:
+    def _validate_agents(self, agents: List[int]) -> bool:
         '''
         Returns True if the following are True:
         1. agents is a list of 6 naturals
         2. each element is within its respective maximum value.
         '''
-        return check_valid_lst(agents, 6, check_nat) and all(a <= self._agent_maxes[i] for i, a in enumerate(agents))
+        return check_valid_lst(agents, 6, check_nat) and all(a <= AGENT_MAXES[i] for i, a in enumerate(agents))
 
     @property
-    def streets(self):
+    def streets(self) -> List[Street]:
         '''
         Returns the list of Street objects for this PlayerState.
         '''
         return self._streets
 
     @streets.setter
-    def streets(self, streets) -> None:
-        if not check_valid_lst(streets, 3, lambda x: type(x) == dict):
-            raise PlayerStateException(f"Given {streets}, but streets must be a list 3 dictionaries.")
+    def streets(self, streets: List) -> None:
+        my_assert(check_valid_lst(streets, 3, lambda x: type(x) == dict),
+            PlayerStateException,
+            f"Given {streets}, but streets must be a list 3 dictionaries.")
         self._streets = [Street(st, i) for i, st in enumerate(streets)]
 
         num_roundabouts = sum([street.roundabout_count() for street in self._streets])
@@ -49,26 +49,27 @@ class PlayerState():
             raise PlayerStateException(f"You can only play two roundabouts in a game.")
 
     @property
-    def agents(self):
+    def agents(self) -> List[int]:
         '''
         Returns the list of agents for this PlayerState.
         '''
         return self._agents
 
     @agents.setter
-    def agents(self, agents: list) -> None:
+    def agents(self, agents: List[int]) -> None:
         if not self._validate_agents(agents):
             raise PlayerStateException(f"Given {agents}, but agents must be a list of 6 naturals.")
         self._agents = agents
 
     @property
-    def city_plan_score(self):
+    def city_plan_score(self) -> List[Union[int, str]]:
         return self._cp_scores
 
     @city_plan_score.setter
     def city_plan_score(self, cp_scores: list):
-        if not check_valid_lst(cp_scores, 3, lambda x: (check_nat(x) or x == "blank")):
-            raise PlayerStateException(f"Given {cp_scores}, but city_plan_scores must be a list containing naturals or 'blank'.")
+        my_assert(check_valid_lst(cp_scores, 3, lambda x: (check_nat(x) or x == "blank")),
+            PlayerStateException,
+            f"Given {cp_scores}, but city_plan_scores must be a list containing naturals or 'blank'.")
         self._cp_scores = cp_scores
     
     @property
@@ -76,9 +77,10 @@ class PlayerState():
         return self._refusals
 
     @refusals.setter
-    def refusals(self, refusals) -> None:
-        if not check_nat(refusals) or refusals > 3:
-            raise PlayerStateException(f"Given {refusals}, but refusals must be either 0, 1, 2, or 3.")
+    def refusals(self, refusals: int) -> None:
+        my_assert(check_nat(refusals) and refusals <= MAX_REFUSALS,
+            PlayerStateException,
+            f"Given {refusals}, but refusals must be either 0, 1, 2, or 3.")
         self._refusals = refusals
 
     @property
@@ -86,28 +88,28 @@ class PlayerState():
         return self._temps
 
     @temps.setter
-    def temps(self, temps) -> None:
-        if not check_nat(temps) or temps > 11:
-            raise PlayerStateException(f"Given {temps}, but temps must be an integer between 0 and 11.")
+    def temps(self, temps: int) -> None:
+        my_assert(check_nat(temps) and temps <= MAX_TEMPS,
+            PlayerStateException,
+            f"Given {temps}, but temps must be an integer between 0 and 11.")
         self._temps = temps
     
     @property
     def roundabouts(self) -> int:
         return sum([street.roundabout_count() for street in self._streets])
 
-    def temps_score(self, temps_lst) -> int:
+    def temps_score(self, temps_lst: List[int]) -> int:
         if self._temps == 0:
             return 0
-        
-        score = [7, 4, 1]
+
         if not temps_lst:
-            return score[0]
+            return TEMP_SCORES[0]
 
         temps_lst.append(self._temps)
         sorted_temps_lst = list(set(temps_lst))
         sorted_temps_lst.sort(reverse=True)
         rank = sorted_temps_lst.index(self._temps)
-        return score[rank] if rank < 3 else 0
+        return TEMP_SCORES[rank] if rank < 3 else 0
 
     def total_cp_scores(self) -> int:
         total = 0
@@ -117,7 +119,7 @@ class PlayerState():
         
         return total
 
-    def calculate_score(self, temps_lst) -> int:
+    def calculate_score(self, temps_lst: List[int]) -> int:
         total_score = 0
         pools_count = 0
         bis_count = 0
@@ -164,7 +166,7 @@ class PlayerState():
             all([score != "blank" for score in self._cp_scores]))
 
         
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict:
         '''
         Returns the Dictionary representation of a PlayerState.
         '''
