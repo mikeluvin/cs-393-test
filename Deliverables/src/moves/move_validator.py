@@ -1,9 +1,10 @@
 from player_state import *
 from game_state import *
-from exception import MoveException
+from typing import *
+from exception import MoveException, my_assert
 from constants import POOL_LOCS, STREET_LENS, CriteriaCard
 from collections import defaultdict
-from helpers import is_eq_or_mono_incr
+from helpers import is_eq_or_mono_incr, check_valid_lst
 
 class MoveValidator():
     def __init__(self, game_state: GameState, ps1: PlayerState, ps2: PlayerState) -> None:
@@ -12,6 +13,9 @@ class MoveValidator():
         - ps1: Initial PlayerState object
         - ps2: Subsequent PlayerState object
         '''
+        my_assert(type(game_state) == GameState and type(ps1) == type(ps2) == PlayerState,
+            MoveException,
+            "MoveValidator constructor requires a GameState and two PlayerStates.")
         self._game_st = game_state
         self._ps1 = ps1
         self._ps2 = ps2
@@ -39,7 +43,7 @@ class MoveValidator():
         # check that a refusal was used
         self._refusals = False
         # holds: list of [city_plan_idx, score_claimed]
-        self._city_plan_score = []
+        self._city_plan_scores = []
         # store the row, col of roundabout
         self._roundabout = []
 
@@ -53,10 +57,10 @@ class MoveValidator():
         '''
         Returns True if there was an update to a city plan.
         '''
-        return any(self._in_plan) or self._city_plan_score
+        return any(self._in_plan) or self._city_plan_scores
 
     def new_city_plans(self):
-        return self._city_plan_score
+        return self._city_plan_scores
         
     def to_dict(self) -> dict:
         dict_repr = {
@@ -68,7 +72,7 @@ class MoveValidator():
             "temps": self._temps,
             "agents": self._agents,
             "refusals": self._refusals,
-            "city_plan_score": self._city_plan_score
+            "city_plan_score": self._city_plan_scores
         }
         return dict_repr
 
@@ -160,7 +164,7 @@ class MoveValidator():
             if cp1 != cp2:
                 if cp1 != "blank":
                     raise MoveException(f"You can only claim a city plan once.")
-                self._city_plan_score.append([i, cp2])
+                self._city_plan_scores.append([i, cp2])
 
     def _find_house_fence_in_plan(self, i:int, j:int, h1: Home, h2: Home, prev_h1: Home):
         '''
@@ -204,10 +208,9 @@ class MoveValidator():
                 raise MoveException(f"Cannot remove a house from a city plan.")
             self._in_plan[i].append([j, h2])
 
-    def _validate_card_num(self) -> tuple:
+    def _validate_card_num(self) -> List[Tuple[int, int]]:
         '''
-        Return the possible cards used, a list of [card_idx, card_num] values. 
-        Returns [[-1, -1]] if the house placed doesn't correspond to any card.
+        Return the possible cards used, a list of (card_idx, card_num) values.
         '''
         house_num = self._houses[2].num
         poss_cards = []
@@ -225,10 +228,14 @@ class MoveValidator():
 
         if not poss_cards:
             raise MoveException(f"You must play a card.")
+
+        my_assert(check_valid_lst(poss_cards, None, lambda tple: type(tple) == tuple and type(tple[0]) == type(tple[1]) == int),
+            MoveException,
+            "Internal error when validating card nums.")
         
         return poss_cards
 
-    def _validate_effect(self, poss_cards: list):
+    def _validate_effect(self, poss_cards: List[Tuple[int, int]]):
         '''
         Validates that the effect used corresponds to one of the possible cards played.
         Raises a MoveException otherwise.
@@ -289,7 +296,7 @@ class MoveValidator():
                             raise MoveException(f"Invalid refusal use, you can place a house.")
         return True
 
-    def _find_new_estates(self):
+    def _find_new_estates(self) -> DefaultDict[int, int]:
         '''
         Returns a dictionary with the new estates claimed during this turn,
         or False if there was a rule violation. Keys are estate sizes, values are # of estates with that size
@@ -299,7 +306,7 @@ class MoveValidator():
         # if we're trying to claim the "end houses" city plan, then exclude them from 
         # the loop (since they can't be double counted)
         start, end = 0, STREET_LENS[0] - 1
-        cps_claimed_criteria = [self._game_st.city_plans[i].criteria.valid_criteria for i, _ in self._city_plan_score]
+        cps_claimed_criteria = [self._game_st.city_plans[i].criteria.valid_criteria for i, _ in self._city_plan_scores]
         if CriteriaCard.END_HOUSES in cps_claimed_criteria:
             start += 1
             end -= 1
@@ -340,7 +347,7 @@ class MoveValidator():
         # keys are estate sizes, values are # of estates with that size
         estates = self._find_new_estates()
         # find city plans that were potentially claimed
-        for i, cp_score in self._city_plan_score:
+        for i, cp_score in self._city_plan_scores:
             cp_claimed = self._game_st.city_plans[i]
 
             if self._game_st.city_plans_won[i]:

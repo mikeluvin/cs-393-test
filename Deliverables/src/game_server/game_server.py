@@ -1,7 +1,7 @@
 import socket
 import json
 import sys
-
+from typing import *
 from . import ConstructionCardDeck, CityPlanDeck
 from network import *
 from players import *
@@ -9,7 +9,7 @@ from game_state import GameState
 from player_state import PlayerState
 
 class GameServer():
-    def __init__(self, game_config: dict, local_players: list, cc_lst: list, cp_lst: list) -> None:
+    def __init__(self, game_config: Dict[str, int], local_players: List, cc_lst: List[List], cp_lst: List[Dict]) -> None:
         self._num_network_players = game_config["players"]
         self._port = game_config["port"]
         self._cc_deck = ConstructionCardDeck(cc_lst)
@@ -35,7 +35,7 @@ class GameServer():
             player_sock, addr = self._sock.accept()
             self._players.append(NetworkPlayer(player_sock, addr))
 
-    def _add_local_players(self, local_players: list) -> None:
+    def _add_local_players(self, local_players: List) -> None:
         for player_name, move_generator in local_players:
             self._players.append(LocalPlayer(player_name, move_generator))
 
@@ -84,7 +84,7 @@ class GameServer():
 
         self._draw_new_construction_cards()
 
-    def _find_new_city_plan_scores(self, claimed_cps: set, prev_ps: PlayerState, new_ps: PlayerState):
+    def _find_new_city_plan_scores(self, claimed_cps: Set[int], prev_ps: PlayerState, new_ps: PlayerState):
         '''
         Find newly claimed city plan scores from prev_ps to new_ps and add 
         their indices to claimed_cps set.
@@ -103,7 +103,7 @@ class GameServer():
 
         return False
 
-    def _get_player_temps(self):
+    def _get_player_temps(self) -> List[int]:
         temps_lst = []
         for curr_player in self._players:
             if not curr_player.player_state:
@@ -112,7 +112,7 @@ class GameServer():
 
         return temps_lst
 
-    def _calculate_player_scores(self) -> list:
+    def _calculate_player_scores(self) -> List[List]:
         temps_lst = self._get_player_temps()
         scores = []
         for curr_player in self._players:
@@ -120,7 +120,7 @@ class GameServer():
 
         return scores
 
-    def _send_final_scores(self, scores: list) -> None:
+    def _send_final_scores(self, scores: List[List]) -> None:
         sys.stdout.write(json.dumps(scores))
         sys.stdout.flush()
         scores_dict = { "game-over": scores }
