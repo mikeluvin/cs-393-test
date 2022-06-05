@@ -13,6 +13,16 @@ class TestCityPlan(unittest.TestCase):
         cp = CityPlan(cp_dict)
         self.assertEqual(cp.to_dict(), cp_dict)
 
+    def test_cp_not_increasing_order(self):
+        cp_dict = {
+            "criteria": [8,4,2,6],
+            "position": 1,
+            "score1": 8,
+            "score2": 4
+        }
+        with self.assertRaises(CriteriaException):
+            CityPlan(cp_dict)
+
     def test_valid_special_criteria1(self):
         criteria_1 = [
             [ "all houses", 0 ],
@@ -121,6 +131,28 @@ class TestCityPlan(unittest.TestCase):
             cp_dict["criteria"] = criteria
             with self.assertRaises(CriteriaException):
                 CityPlan(cp_dict)
+
+class TestEffects(unittest.TestCase):
+    def test_valid_effects(self):
+        effect_str = "agent"
+        effect = Effect(effect_str)
+        self.assertEqual(str(effect), effect_str)
+
+    def test_invalid_effects(self):
+        effects_str = "poool"
+        with self.assertRaises(EffectException):
+            Effect(effects_str)
+
+class TestConstructionCards(unittest.TestCase):
+    def test_valid_ccards(self):
+        ccards_lst = [1,"surveyor"]
+        ccards = ConstructionCard(ccards_lst)
+        self.assertEqual(ccards.to_list(), ccards_lst)
+    
+    def test_invalid_ccards(self):
+        ccards_lst = [16, "pool"]
+        with self.assertRaises(ConstructionCardException):
+            ConstructionCard(ccards_lst)
 
 
 if __name__ == "__main__":
