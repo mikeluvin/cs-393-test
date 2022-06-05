@@ -1,4 +1,4 @@
-from exception import *
+from exception import EffectException, my_assert
 from helpers import *
 
 class Effect():
@@ -12,8 +12,9 @@ class Effect():
 
     @effect.setter
     def effect(self, effect: str) -> None:
-        if not check_type_and_membership(effect, str, self._effects):
-            raise EffectException(f"Given {effect}, but effect must be one of {self._effects}.")
+        my_assert(check_type_and_membership(effect, str, self._effects),
+            EffectException,
+            f"Given {effect}, but effect must be one of {self._effects}.")
         self._effect = effect
 
     def __repr__(self) -> str:

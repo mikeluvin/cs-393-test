@@ -1,7 +1,10 @@
 PARK_MAXES = [3, 4, 5]
 POOL_LOCS = [[2, 6, 7], [0, 3, 7], [1, 6, 10]]
 STREET_LENS = [10, 11, 12]
+AGENT_MAXES = [1, 2, 3, 4, 4, 4]
 MAX_REFUSALS = 3
+MAX_TEMPS = 11
+TEMP_SCORES = [7, 4, 1]
 
 EMPTY_PS = {
     "agents":[0,0,0,0,0,0],
