@@ -20,7 +20,6 @@ class GameServer():
         self._start_tcp_listener()
         self._connect_to_network_players()
         self._add_local_players(local_players)
-        self._play_game()
 
     def _start_tcp_listener(self):
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -57,7 +56,7 @@ class GameServer():
         self._game_state.ccards = curr_ccs
         self._game_state.effects = prev_cc_effects
 
-    def _play_game(self):
+    def play_game(self):
         while not self._is_game_over():
             self._all_players_play_move()
 

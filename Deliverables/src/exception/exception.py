@@ -59,3 +59,7 @@ class PlayerAdapterException(Exception):
 class PlayerConnectionException(Exception):
     def __init__(self, message="Network connection dropped by player."):
         super().__init__(message)
+
+class CardDeckException(Exception):
+    def __init__(self, message="Invalid card deck."):
+        super().__init__(message)

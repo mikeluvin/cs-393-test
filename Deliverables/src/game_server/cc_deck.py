@@ -1,13 +1,18 @@
 import random
+from copy import deepcopy
 from constants import NUM_CCS, CONSTRUCTION_CARDS
 
 class ConstructionCardDeck():
     def __init__(self, card_lst: list) -> None:
-        self._deck = card_lst
+        self._deck = deepcopy(card_lst)
         self._used_deck = []
         self._prev_cards = []
-        self.curr_cards = []
+        self._curr_cards = []
         self.draw_new_cards()
+
+    @property
+    def curr_cards(self) -> list:
+        return self._curr_cards
 
     def draw_new_cards(self) -> list:
         '''
@@ -21,8 +26,8 @@ class ConstructionCardDeck():
         if not self._deck:
             self._deck, self._used_deck = self._used_deck, []
 
-        self._prev_cards = self.curr_cards
-        self.curr_cards = new_cards
+        self._prev_cards = self._curr_cards
+        self._curr_cards = new_cards
         return new_cards
 
     def get_prev_card_effects(self) -> list:
