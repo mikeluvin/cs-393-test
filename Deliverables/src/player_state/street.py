@@ -116,7 +116,7 @@ class Street():
                 prev_non_bis = -1
                 continue
             if home.num <= prev_non_bis:
-                raise StreetException(f"Violation in street {self._idx + 1}: non-bis house numbers must be strictly increasing.")
+                raise StreetException(f"Violation in street {self._idx}: non-bis house numbers must be strictly increasing.")
             
             prev_non_bis = home.num
     
@@ -151,10 +151,10 @@ class Street():
                 if next_home and curr_num == next_home.num and not home.fence_right:
                     continue
 
-                raise StreetException(f"Violation in street {self._idx + 1}: bis must have the same number as an adjacent house.")
+                raise StreetException(f"Violation in street {self._idx}: bis must have the same number as an adjacent house.")
             else:
                 if bis_obligation is not None and curr_num != bis_obligation:
-                    raise StreetException(f"Violation in street {self._idx + 1}: bis played next to a house with a different number (or blank).")
+                    raise StreetException(f"Violation in street {self._idx}: bis played next to a house with a different number (or blank).")
                 if curr_num == "blank":
                     bis_anchor, bis_obligation = None, None
                     continue
@@ -163,7 +163,7 @@ class Street():
                     
         # if we make it outside the loop but still fulfilled the bis_obligation, it's invalid
         if bis_obligation is not None:
-            raise StreetException(f"Violation in street {self._idx + 1}: bis played next to a house with a different number (or blank).")
+            raise StreetException(f"Violation in street {self._idx}: bis played next to a house with a different number (or blank).")
                 
     def _check_homes_pools(self) -> None:
         '''
@@ -174,7 +174,7 @@ class Street():
             if has_pool:
                 home = self._homes[curr_pool_locs[i]]
                 if type(home.num) != int or home.is_bis:
-                    raise StreetException(f"Violation in street {self._idx + 1}: pool cannot be on a blank, bis, or roundabout house.")
+                    raise StreetException(f"Violation in street {self._idx}: {home} {curr_pool_locs[i]} pool cannot be on a blank, bis, or roundabout house.")
 
 
     def _validate_parks(self, parks: int, non_bis_ct: int) -> bool:
@@ -218,12 +218,17 @@ class Street():
             HomeException,
             "Cannot place a roundabout on a home that's not blank.")
         curr_home.num = "roundabout"
-        curr_home.fence_left = True
-        curr_home.fence_right = True
         if home_idx > 0:
-            self.homes[home_idx - 1].fence_right = True
+            self.place_fence(home_idx - 1)
         if home_idx < STREET_LENS[self._idx] - 1:
-            self.homes[home_idx + 1].fence_left = True
+            self.place_fence(home_idx)
+
+    def place_fence(self, fence_idx: int) -> None:
+        self.homes[fence_idx].fence_right = True
+        self.homes[fence_idx + 1].fence_left = True
+
+    def has_fence(self, fence_idx: int) -> bool:
+        return self.homes[fence_idx + 1].fence_left
 
     def parks_score(self) -> int:
         # (mex number of parks)* 4 - 2 = max score
