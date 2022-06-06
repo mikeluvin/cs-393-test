@@ -76,11 +76,12 @@ class GameServer():
             curr_player.play_next_move(self._game_state)
             claimed_cps.update(curr_player.get_new_city_plan_scores())
             
-        # update claimed city plans in GameState
+        self._update_city_plans_claimed(claimed_cps)
+        self._draw_new_construction_cards()
+
+    def _update_city_plans_claimed(self, claimed_cps):
         for i in claimed_cps:
             self._game_state.city_plans_won[i] = True
-
-        self._draw_new_construction_cards()
 
     def _is_game_over(self) -> bool:
         for curr_player in self._players:
