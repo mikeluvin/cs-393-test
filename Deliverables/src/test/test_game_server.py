@@ -55,48 +55,48 @@ class TestCityPlanDeck(unittest.TestCase):
 
 
 class TestGameServer(unittest.TestCase):
-    # def test_init_local_players(self):
-    #     local_players = [
-    #         ("p1", SimpleMoveGenerator),
-    #         ("p2", SimpleMoveGenerator)
-    #     ]
-    #     network_config = { "players": 0, "port": 8080 }
-    #     server = GameServer(network_config, local_players, CONSTRUCTION_CARDS, CITY_PLAN_CARDS)
-    #     server._network.close()
-    #     init_players = []
-    #     for player_name, move_generator in local_players:
-    #         init_players.append(LocalPlayer(player_name, move_generator))
+    def test_init_local_players(self):
+        local_players = [
+            ("p1", SimpleMoveGenerator),
+            ("p2", SimpleMoveGenerator)
+        ]
+        network_config = { "players": 0, "port": 8080 }
+        server = GameServer(network_config, local_players, CONSTRUCTION_CARDS, CITY_PLAN_CARDS)
+        server._network.close()
+        init_players = []
+        for player_name, move_generator in local_players:
+            init_players.append(LocalPlayer(player_name, move_generator))
 
-    #     self.assertEqual(init_players, server.players)
+        self.assertEqual(init_players, server.players)
 
-    # def test_all_players_play_move(self):
-    #     local_players = [
-    #         ("p1", SimpleMoveGenerator),
-    #         ("p2", SimpleMoveGenerator)
-    #     ]
-    #     network_config = { "players": 0, "port": 8080 }
-    #     server = GameServer(network_config, local_players, CONSTRUCTION_CARDS, CITY_PLAN_CARDS)
-    #     server._network.close()
-    #     server._all_players_play_move()
-    #     for curr_player in server.players:
-    #         self.assertFalse(curr_player.cheated)
-    #         self.assertNotEqual(curr_player.prev_ps, curr_player.player_state)
+    def test_all_players_play_move(self):
+        local_players = [
+            ("p1", SimpleMoveGenerator),
+            ("p2", SimpleMoveGenerator)
+        ]
+        network_config = { "players": 0, "port": 8080 }
+        server = GameServer(network_config, local_players, CONSTRUCTION_CARDS, CITY_PLAN_CARDS)
+        server._network.close()
+        server._all_players_play_move()
+        for curr_player in server.players:
+            self.assertFalse(curr_player.cheated)
+            self.assertNotEqual(curr_player.prev_ps, curr_player.player_state)
 
-    # def test_play_game(self):
-    #     local_players = [
-    #         ("p1", SimpleMoveGenerator),
-    #         ("p2", SimpleMoveGenerator)
-    #     ]
-    #     network_config = { "players": 0, "port": 8080 }
-    #     server = GameServer(network_config, local_players, CONSTRUCTION_CARDS, CITY_PLAN_CARDS)
-    #     server.play_game()
-    #     self.assertTrue(server._is_game_over())
-    #     for curr_player in server.players:
-    #         self.assertFalse(curr_player.cheated)
+    def test_play_game(self):
+        local_players = [
+            ("p1", SimpleMoveGenerator),
+            ("p2", SimpleMoveGenerator)
+        ]
+        network_config = { "players": 0, "port": 8080 }
+        server = GameServer(network_config, local_players, CONSTRUCTION_CARDS, CITY_PLAN_CARDS)
+        server.play_game()
+        self.assertTrue(server._is_game_over())
+        for curr_player in server.players:
+            self.assertFalse(curr_player.cheated)
         
-    #     scores = server.calculate_player_scores()
-    #     for _, score in scores:
-    #         self.assertTrue(type(score) == int)
+        scores = server.calculate_player_scores()
+        for _, score in scores:
+            self.assertTrue(type(score) == int)
 
     def test_play_game_smart(self):
         local_players = [
@@ -108,35 +108,33 @@ class TestGameServer(unittest.TestCase):
         self.assertTrue(server._is_game_over())
         for curr_player in server.players:
             self.assertFalse(curr_player.cheated)
-            print('\n')
-            print(curr_player.player_state)
         
         scores = server.calculate_player_scores()
         for _, score in scores:
             self.assertTrue(type(score) == int)
 
-    # def test_play_game_cheater(self):
-    #     local_players = [
-    #         ("simple", SimpleMoveGenerator),
-    #         ("cheater", CheatingMoveGenerator)
-    #     ]
-    #     network_config = { "players": 0, "port": 8080 }
-    #     server = GameServer(network_config, local_players, CONSTRUCTION_CARDS, CITY_PLAN_CARDS)
-    #     server.play_game()
-    #     self.assertTrue(server._is_game_over())
-    #     for curr_player in server.players:
-    #         if curr_player.name == "simple":
-    #             self.assertFalse(curr_player.cheated)
-    #         elif curr_player.name == "cheater":
-    #             self.assertTrue(curr_player.cheated)
-    #         self.assertNotEqual(curr_player.prev_ps, curr_player.player_state)
+    def test_play_game_cheater(self):
+        local_players = [
+            ("simple", SimpleMoveGenerator),
+            ("cheater", CheatingMoveGenerator)
+        ]
+        network_config = { "players": 0, "port": 8080 }
+        server = GameServer(network_config, local_players, CONSTRUCTION_CARDS, CITY_PLAN_CARDS)
+        server.play_game()
+        self.assertTrue(server._is_game_over())
+        for curr_player in server.players:
+            if curr_player.name == "simple":
+                self.assertFalse(curr_player.cheated)
+            elif curr_player.name == "cheater":
+                self.assertTrue(curr_player.cheated)
+            self.assertNotEqual(curr_player.prev_ps, curr_player.player_state)
 
-    #     scores = server.calculate_player_scores()
-    #     for name, score in scores:
-    #         if name == "simple":
-    #             self.assertTrue(type(score) == int)
-    #         elif name == "cheater":
-    #             self.assertFalse(score)
+        scores = server.calculate_player_scores()
+        for name, score in scores:
+            if name == "simple":
+                self.assertTrue(type(score) == int)
+            elif name == "cheater":
+                self.assertFalse(score)
     
     
 if __name__ == "__main__":

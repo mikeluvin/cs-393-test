@@ -3,7 +3,7 @@ import sys
 from game_state import GameState
 from player_state import PlayerState
 from . import parse_stdin
-from moves import SimpleMoveGenerator
+from moves import SimpleMoveGenerator, SmartMoveGenerator
 
 def main():
     input_json = parse_stdin()
