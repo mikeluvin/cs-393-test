@@ -97,12 +97,12 @@ class SmartMoveGenerator(MoveGenerator):
                 if not new_ps.streets[st_idx].has_fence(i):
                     new_ps.streets[st_idx].place_fence(i)
                     break
-        elif effect == "bis":
-            street = new_ps.streets[st_idx]
-            curr_home = street.homes[home_idx]
-            if home_idx > 0 and street.homes[home_idx - 1].num == "blank" and not curr_home.fence_left:
-                street.homes[home_idx - 1].num = num
-                street.homes[home_idx - 1].is_bis = True
+        # elif effect == "bis":
+        #     street = new_ps.streets[st_idx]
+        #     curr_home = street.homes[home_idx]
+        #     if home_idx > 0 and street.homes[home_idx - 1].num == "blank" and not curr_home.fence_left:
+        #         street.homes[home_idx - 1].num = num
+        #         street.homes[home_idx - 1].is_bis = True
 
 
 
