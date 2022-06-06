@@ -84,13 +84,15 @@ class GameServer():
             self._game_state.city_plans_won[i] = True
 
     def _is_game_over(self) -> bool:
+        num_cheaters = 0
         for curr_player in self._players:
-            if not curr_player.player_state:
+            if curr_player.cheated:
+                num_cheaters += 1
                 continue
             if curr_player.player_state.is_game_over():
                 return True
 
-        return False
+        return num_cheaters == len(self._players) 
 
     def _get_player_temps(self) -> List[int]:
         temps_lst = []

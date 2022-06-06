@@ -14,8 +14,8 @@ class SimpleMoveGenerator(MoveGenerator):
         Returns a new PlayerState with a new house placed, or a refusal used.
         '''
         new_player_st = PlayerState(self.player_st.to_dict())
-        for i, street in enumerate(new_player_st.streets):
-            for ccard in self.game_st.ccards:
+        for ccard in self.game_st.ccards:
+            for i, street in enumerate(new_player_st.streets):
                 locations = street.get_possible_home_locations(ccard.num)
                 if locations:
                     street.homes[locations[0]].num = ccard.num

@@ -4,7 +4,7 @@ from helpers import *
 from exception import PlayerStateException, my_assert
 from . import Street
 from collections import defaultdict
-from constants import EMPTY_PS, MAX_REFUSALS, AGENT_MAXES, MAX_TEMPS, TEMP_SCORES
+from constants import EMPTY_PS, MAX_REFUSALS, AGENT_MAXES, MAX_TEMPS, TEMP_SCORES, MAX_ROUNDABOUTS
 
 class PlayerState():
     def __init__(self, ps_dict: Dict=EMPTY_PS) -> None:
@@ -44,8 +44,7 @@ class PlayerState():
             f"Given {streets}, but streets must be a list 3 dictionaries.")
         self._streets = [Street(st, i) for i, st in enumerate(streets)]
 
-        num_roundabouts = sum([street.roundabout_count() for street in self._streets])
-        my_assert(num_roundabouts <= 2,
+        my_assert(self.roundabouts <= MAX_ROUNDABOUTS,
             PlayerStateException,
             f"You can only play two roundabouts in a game.")
 

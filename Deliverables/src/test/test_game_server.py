@@ -1,6 +1,6 @@
 import unittest
 from game_server import *
-from moves import CheatingMoveGenerator, SimpleMoveGenerator
+from moves import CheatingMoveGenerator, SimpleMoveGenerator, SmartMoveGenerator
 from players import LocalPlayer
 from constants import CONSTRUCTION_CARDS, CITY_PLAN_CARDS
 
@@ -93,6 +93,23 @@ class TestGameServer(unittest.TestCase):
         self.assertTrue(server._is_game_over())
         for curr_player in server.players:
             self.assertFalse(curr_player.cheated)
+        
+        scores = server.calculate_player_scores()
+        for _, score in scores:
+            self.assertTrue(type(score) == int)
+
+    def test_play_game_smart(self):
+        local_players = [
+            ("smart1", SmartMoveGenerator),
+        ]
+        network_config = { "players": 0, "port": 8080 }
+        server = GameServer(network_config, local_players, CONSTRUCTION_CARDS, CITY_PLAN_CARDS)
+        server.play_game()
+        self.assertTrue(server._is_game_over())
+        for curr_player in server.players:
+            self.assertFalse(curr_player.cheated)
+            print('\n')
+            print(curr_player.player_state)
         
         scores = server.calculate_player_scores()
         for _, score in scores:

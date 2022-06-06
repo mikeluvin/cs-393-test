@@ -2,7 +2,7 @@ import json
 from copy import deepcopy
 from typing import *
 from helpers import *
-from exception import StreetException, my_assert
+from exception import HomeException, StreetException, my_assert
 from . import Home
 from constants import PARK_MAXES, POOL_LOCS, STREET_LENS
 from collections import defaultdict
@@ -210,6 +210,20 @@ class Street():
         '''
         self.homes[home_idx].num = new_num
         self._check_homes_rule_violations()
+
+
+    def place_roundabout(self, home_idx: int) -> None:
+        curr_home = self.homes[home_idx]
+        my_assert(curr_home.num == "blank",
+            HomeException,
+            "Cannot place a roundabout on a home that's not blank.")
+        curr_home.num = "roundabout"
+        curr_home.fence_left = True
+        curr_home.fence_right = True
+        if home_idx > 0:
+            self.homes[home_idx - 1].fence_right = True
+        if home_idx < STREET_LENS[self._idx] - 1:
+            self.homes[home_idx + 1].fence_left = True
 
     def parks_score(self) -> int:
         # (mex number of parks)* 4 - 2 = max score
