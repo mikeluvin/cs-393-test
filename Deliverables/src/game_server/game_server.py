@@ -5,6 +5,7 @@ from typing import *
 from . import ConstructionCardDeck, CityPlanDeck
 from network import *
 from players import *
+from moves import MoveGenerator
 from game_state import GameState
 from player_state import PlayerState
 
@@ -21,6 +22,10 @@ class GameServer():
         self._connect_to_network_players()
         self._add_local_players(local_players)
 
+    @property
+    def players(self) -> List[Player]:
+        return self._players
+
     def _start_tcp_listener(self):
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._sock.bind(('', self._port))
@@ -34,7 +39,7 @@ class GameServer():
             player_sock, addr = self._sock.accept()
             self._players.append(NetworkPlayer(player_sock, addr))
 
-    def _add_local_players(self, local_players: List) -> None:
+    def _add_local_players(self, local_players: List[Tuple[str, MoveGenerator]]) -> None:
         for player_name, move_generator in local_players:
             self._players.append(LocalPlayer(player_name, move_generator))
 
@@ -70,28 +75,14 @@ class GameServer():
             if curr_player.cheated:
                 continue
 
-            prev_ps = curr_player.player_state
             curr_player.play_next_move(self._game_state)
-            if curr_player.cheated:
-                continue
-
-            self._find_new_city_plan_scores(claimed_cps, prev_ps, curr_player.player_state)
+            claimed_cps.update(curr_player.get_new_city_plan_scores())
             
         # update claimed city plans in GameState
         for i in claimed_cps:
             self._game_state.city_plans_won[i] = True
 
         self._draw_new_construction_cards()
-
-    def _find_new_city_plan_scores(self, claimed_cps: Set[int], prev_ps: PlayerState, new_ps: PlayerState):
-        '''
-        Find newly claimed city plan scores from prev_ps to new_ps and add 
-        their indices to claimed_cps set.
-        '''
-        for cp_idx, score in enumerate(new_ps.city_plan_score):
-            prev_cp_score = prev_ps.city_plan_score[cp_idx]
-            if prev_cp_score == "blank" and score != "blank":
-                claimed_cps.add(cp_idx)
 
     def _is_game_over(self) -> bool:
         for curr_player in self._players:

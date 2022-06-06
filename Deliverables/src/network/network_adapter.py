@@ -17,16 +17,18 @@ class NetworkAdapter():
         curr_data, data_lst = b"", []
         while b"\n" not in curr_data:
             curr_data = self._sock.recv(8192)
+            # socket module docs state that a recv() that returns zero 
+            # bytes means the connection was closed
             if len(curr_data) == 0:
                 raise PlayerConnectionException()
             data_lst.append(curr_data)
 
         self._data += b"".join(data_lst)
-        decoded_data_lst = self._data.decode(ENCODING).split("\n", maxsplit=1)
-        request = decoded_data_lst[0].strip()
+        split_data_lst = self._data.split(b"\n", maxsplit=1)
+        request = split_data_lst[0].decode(ENCODING).strip()
         # if we somehow have >2 valid json objects, keep the remaining
         # so we can access them in the future
-        self._data = decoded_data_lst[1].encode(ENCODING)
+        self._data = split_data_lst[1]
         
         return json.loads(request)
 

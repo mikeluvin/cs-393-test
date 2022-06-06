@@ -7,8 +7,14 @@ def my_assert(to_assert: bool, Exn: Exception, message: str) -> None:
     if not to_assert:
         raise Exn(message)
 
+class WelcomeToException(Exception):
+    '''
+    Base class for all exceptions related to Welcome To.
+    '''
+    def __init__(self, message="Exception raised in Welcome To."):
+        super().__init__(message)
 
-class PlayerStateException(Exception):
+class PlayerStateException(WelcomeToException):
     '''
     Base class for all exceptions related to the PlayerState.
     '''
@@ -24,7 +30,7 @@ class StreetException(PlayerStateException):
         super().__init__(message)
 
 
-class GameStateException(Exception):
+class GameStateException(WelcomeToException):
     '''
     Base class for all exceptions related to the GameState.
     '''
@@ -47,19 +53,19 @@ class CriteriaException(CityPlanException):
     def __init__(self, message="Invalid criteria."):
         super().__init__(message)
 
-class MoveException(Exception):
+
+class MoveException(WelcomeToException):
     def __init__(self, message="Invalid move."):
         super().__init__(message)
 
-
-class PlayerAdapterException(Exception):
+class PlayerAdapterException(WelcomeToException):
     def __init__(self, message="Invalid network request."):
         super().__init__(message)
 
-class PlayerConnectionException(Exception):
+class PlayerConnectionException(WelcomeToException):
     def __init__(self, message="Network connection dropped by player."):
         super().__init__(message)
 
-class CardDeckException(Exception):
+class CardDeckException(WelcomeToException):
     def __init__(self, message="Invalid card deck."):
         super().__init__(message)
