@@ -88,4 +88,4 @@ class GameState():
         return json.dumps(self.to_dict())
 
     def __eq__(self, other: object) -> bool:
-        return self.to_dict() == other.to_dict()
+        return type(other) == GameState and self.to_dict() == other.to_dict()

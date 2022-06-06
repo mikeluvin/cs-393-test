@@ -14,6 +14,7 @@ class WelcomeToException(Exception):
     def __init__(self, message="Exception raised in Welcome To."):
         super().__init__(message)
 
+
 class PlayerStateException(WelcomeToException):
     '''
     Base class for all exceptions related to the PlayerState.
@@ -37,20 +38,20 @@ class GameStateException(WelcomeToException):
     def __init__(self, message="Invalid game state."):
         super().__init__(message)
 
-class EffectException(GameStateException):
-    def __init__(self, message="Invalid effect."):
-        super().__init__(message)
-
 class CityPlanException(GameStateException):
     def __init__(self, message="Invalid city plan."):
+        super().__init__(message)
+
+class CriteriaException(CityPlanException):
+    def __init__(self, message="Invalid criteria."):
         super().__init__(message)
 
 class ConstructionCardException(GameStateException):
     def __init__(self, message="Invalid construction card."):
         super().__init__(message)
 
-class CriteriaException(CityPlanException):
-    def __init__(self, message="Invalid criteria."):
+class EffectException(ConstructionCardException):
+    def __init__(self, message="Invalid effect."):
         super().__init__(message)
 
 
@@ -58,7 +59,7 @@ class MoveException(WelcomeToException):
     def __init__(self, message="Invalid move."):
         super().__init__(message)
 
-class PlayerAdapterException(WelcomeToException):
+class PlayerClientException(WelcomeToException):
     def __init__(self, message="Invalid network request."):
         super().__init__(message)
 

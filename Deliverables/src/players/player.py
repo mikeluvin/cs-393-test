@@ -83,4 +83,4 @@ class Player():
         return self._player_state.calculate_score(temps_lst) if self._player_state else False
 
     def __eq__(self, other: object) -> bool:
-        return other.player_state == self._player_state and other.name == self._name and other.cheated == self.cheated
+        return isinstance(other, Player) and other.player_state == self._player_state and other.name == self._name and other.cheated == self.cheated

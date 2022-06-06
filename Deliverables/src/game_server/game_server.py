@@ -7,7 +7,6 @@ from network import *
 from players import *
 from moves import MoveGenerator
 from game_state import GameState
-from player_state import PlayerState
 
 class GameServer():
     def __init__(self, game_config: Dict[str, int], local_players: List, cc_lst: List[List], cp_lst: List[Dict]) -> None:
@@ -65,8 +64,7 @@ class GameServer():
         while not self._is_game_over():
             self._all_players_play_move()
 
-        scores = self._calculate_player_scores()
-        self._send_final_scores(scores)
+        self._send_final_scores()
         self._network.close()
         
     def _all_players_play_move(self):
@@ -102,7 +100,7 @@ class GameServer():
 
         return temps_lst
 
-    def _calculate_player_scores(self) -> List[List]:
+    def calculate_player_scores(self) -> List[List]:
         temps_lst = self._get_player_temps()
         scores = []
         for curr_player in self._players:
@@ -110,7 +108,8 @@ class GameServer():
 
         return scores
 
-    def _send_final_scores(self, scores: List[List]) -> None:
+    def _send_final_scores(self) -> None:
+        scores = self.calculate_player_scores()
         sys.stdout.write(json.dumps(scores))
         sys.stdout.flush()
         scores_dict = { "game-over": scores }

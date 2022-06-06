@@ -45,8 +45,9 @@ class PlayerState():
         self._streets = [Street(st, i) for i, st in enumerate(streets)]
 
         num_roundabouts = sum([street.roundabout_count() for street in self._streets])
-        if num_roundabouts > 2:
-            raise PlayerStateException(f"You can only play two roundabouts in a game.")
+        my_assert(num_roundabouts <= 2,
+            PlayerStateException,
+            f"You can only play two roundabouts in a game.")
 
     @property
     def agents(self) -> List[int]:
@@ -57,8 +58,9 @@ class PlayerState():
 
     @agents.setter
     def agents(self, agents: List[int]) -> None:
-        if not self._validate_agents(agents):
-            raise PlayerStateException(f"Given {agents}, but agents must be a list of 6 naturals.")
+        my_assert(self._validate_agents(agents),
+            PlayerStateException,
+            f"Given {agents}, but agents must be a list of 6 naturals.")
         self._agents = agents
 
     @property
@@ -187,5 +189,5 @@ class PlayerState():
         return json.dumps(self.to_dict())
 
     def __eq__(self, other: object) -> bool:
-        return self.to_dict() == other.to_dict()
+        return type(other) == PlayerState and self.to_dict() == other.to_dict()
 

@@ -9,4 +9,4 @@ class LocalPlayer(Player):
         super().__init__(name)
 
     def _get_next_player_state(self, game_state: GameState) -> PlayerState:
-        return self._MoveGenerator(game_state, self._player_state)
+        return self._MoveGenerator(game_state, self._player_state).generate_move()

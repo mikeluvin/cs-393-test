@@ -134,9 +134,10 @@ class TestCityPlan(unittest.TestCase):
 
 class TestEffects(unittest.TestCase):
     def test_valid_effects(self):
-        effect_str = "agent"
-        effect = Effect(effect_str)
-        self.assertEqual(str(effect), effect_str)
+        effects_lst = ["agent", "surveyor", "temp", "pool", "agent", "bis", "landscaper"]
+        for effect_str in effects_lst:
+            effect = Effect(effect_str)
+            self.assertEqual(str(effect), effect_str)
 
     def test_invalid_effects(self):
         effects_str = "poool"
@@ -149,8 +150,13 @@ class TestConstructionCards(unittest.TestCase):
         ccards = ConstructionCard(ccards_lst)
         self.assertEqual(ccards.to_list(), ccards_lst)
     
-    def test_invalid_ccards(self):
+    def test_invalid_ccards_number(self):
         ccards_lst = [16, "pool"]
+        with self.assertRaises(ConstructionCardException):
+            ConstructionCard(ccards_lst)
+
+    def test_invalid_ccards_effect(self):
+        ccards_lst = [16, "pools"]
         with self.assertRaises(ConstructionCardException):
             ConstructionCard(ccards_lst)
 

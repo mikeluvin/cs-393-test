@@ -1,29 +1,27 @@
 import socket
 
-from exception import PlayerAdapterException
+from exception import PlayerClientException
 from game_state import GameState
 from player_state import PlayerState
 from moves import MoveGenerator
 from network import NetworkAdapter
 
-class PlayerAdapter():
+class PlayerClient():
     def __init__(self, network_config: dict, Player: MoveGenerator) -> None:
         if set(network_config.keys()) != set(["host", "port"]):
-            return PlayerAdapterException(f"Received {network_config}\n\n, but expected a dictionary \
+            return PlayerClientException(f"Received {network_config}\n\n, but expected a dictionary \
                     with keys 'host' and 'port-number'.")
         self._host = network_config["host"]
         self._port = network_config["port"]
         self._Player = Player
-
         self._create_tcp_connection()
-        self._play_game()
 
     def _create_tcp_connection(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((self._host, self._port))
         self._network = NetworkAdapter(sock)
 
-    def _play_game(self) -> None:
+    def play_game(self) -> None:
         playing_keys = set(["game-state", "player-state"])
         game_over_keys = set(["game-over"])
         self._network.send("team23")
@@ -37,7 +35,7 @@ class PlayerAdapter():
                 self._end_game()
                 break
             else:
-                raise PlayerAdapterException(f"Received {request}\n\n but request must be a dictionary \
+                raise PlayerClientException(f"Received {request}\n\n but request must be a dictionary \
                         with keys ('game-state', 'player-state'), or 'game-over'.")
 
     def _play_move(self, request: dict) -> None:
